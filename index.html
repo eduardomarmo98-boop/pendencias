@@ -202,6 +202,20 @@
   h3.secao{margin:22px 0 10px;font-size:15px;font-weight:650;color:var(--azul)}
   .oculto{display:none !important}
 
+  /* rodapé de versão — serve de prova de deploy: antes de investigar
+     bug que "não sumiu", peça um print daqui */
+  .rodape-versao{position:fixed;right:10px;bottom:6px;z-index:30;font-size:10.5px;
+                 color:var(--tinta3);background:rgba(244,246,250,.9);padding:2px 8px;
+                 border-radius:12px;pointer-events:none;letter-spacing:.2px}
+  .faixa-atualizar{position:fixed;left:0;right:0;top:0;z-index:200;background:var(--laranja);
+                   color:#3d2400;padding:11px 16px;text-align:center;font-size:14px;font-weight:600;
+                   box-shadow:0 2px 12px rgba(0,0,0,.2)}
+  .faixa-atualizar button{background:var(--azul);color:#fff;padding:7px 15px;border-radius:7px;
+                          font-weight:650;margin-left:10px;font-size:13.5px}
+  @media (max-width:760px){
+    .rodape-versao{right:auto;left:10px;bottom:calc(6px + env(safe-area-inset-bottom))}
+  }
+
   .listagem{display:flex;flex-direction:column;gap:5px;margin-top:6px}
   .listagem .ln{display:flex;align-items:center;gap:9px;padding:7px 10px;border:1px solid var(--linha);
                 border-radius:8px;font-size:13.5px}
@@ -451,6 +465,7 @@
 </main>
 
 <button class="fab" id="btn-nova">+ Nova pendência</button>
+<div class="rodape-versao" id="rodape-versao"></div>
 </div>
 <div id="modais"></div>
 
@@ -483,6 +498,10 @@ if(SUPABASE_URL.indexOf('COLE_AQUI') === 0 || SUPABASE_KEY.indexOf('COLE_AQUI') 
    um prazo, que é imutável. Se vencer, o sistema exige nova data +
    motivo, e cada reprogramação vira diagnóstico no painel.
    ===================================================================== */
+
+/* Versão. Uma constante só, referenciada em todo lugar — no BeMer ela
+   vive em cinco pontos e vive dessincronizada. Formato AAAA.MM.DD.N. */
+var APP_VERSAO = '2026.07.29.1';
 
 var CHAVE = 'pendencias_bm_v3';
 var DB = null, EU = null, ABA = 'recebidas', SUB = 'setor';
@@ -2076,6 +2095,13 @@ $('btn-dados').addEventListener('click', function(){
   });
 })();
 
+/* =====================================================================
+   VERSÃO
+   O rodapé serve de prova de deploy: antes de investigar bug que
+   "não sumiu", peça um print dele.
+   ===================================================================== */
+$('rodape-versao').textContent = 'v'+APP_VERSAO+' · Brandão & Marmo';
+
 /* ---------------- início ----------------
    Na versão publicada quem dá a partida é a camada do Supabase,
    depois do login. Aqui é só o modo local. */
@@ -2132,23 +2158,43 @@ function envio(promessa, oQue){
 }
 function salvar(){ return true; }   // o servidor é a verdade; nada a gravar aqui
 
-/* ---------------- carga inicial ---------------- */
+/* ---------------- carga inicial ----------------
+   ATENÇÃO: o Supabase devolve no máximo 1000 linhas por consulta e não
+   avisa quando corta. Sem paginar, a partir da milésima pendência o
+   sistema simplesmente esconderia registros — em silêncio. Por isso
+   toda leitura passa por aqui. */
+var PAGINA = 1000;
+function lerTudo(monta){
+  var acumulado = [];
+  function bloco(inicio){
+    return monta().range(inicio, inicio + PAGINA - 1).then(function(r){
+      if(r.error) throw r.error;
+      var lote = r.data || [];
+      acumulado = acumulado.concat(lote);
+      if(lote.length < PAGINA || acumulado.length > 200000)
+        return { data:acumulado, error:null };
+      return bloco(inicio + PAGINA);
+    });
+  }
+  return bloco(0);
+}
+
 function recarregarTudo(){
   return carregarTudo().then(function(){ desenhar(); });
 }
 
 function carregarTudo(){
   return Promise.all([
-    sb.from('obras').select('*').order('nome'),
-    sb.from('setores').select('nome').order('nome'),
-    sb.from('assuntos').select('nome').order('nome'),
-    sb.from('colaboradores').select(CAMPOS_COLAB).order('nome'),
-    sb.from('colaborador_obras').select('*'),
-    sb.from('v_pendencias').select('*'),
-    sb.from('notas').select('*').order('criado_em'),
-    sb.from('reprogramacoes').select('*').order('em'),
-    sb.from('checklist').select('*').order('ordem'),
-    sb.from('anexos').select('*')
+    lerTudo(function(){ return sb.from('obras').select('*').order('nome'); }),
+    lerTudo(function(){ return sb.from('setores').select('nome').order('nome'); }),
+    lerTudo(function(){ return sb.from('assuntos').select('nome').order('nome'); }),
+    lerTudo(function(){ return sb.from('colaboradores').select(CAMPOS_COLAB).order('nome'); }),
+    lerTudo(function(){ return sb.from('colaborador_obras').select('*').order('colaborador_id'); }),
+    lerTudo(function(){ return sb.from('v_pendencias').select('*').order('id'); }),
+    lerTudo(function(){ return sb.from('notas').select('*').order('criado_em'); }),
+    lerTudo(function(){ return sb.from('reprogramacoes').select('*').order('em'); }),
+    lerTudo(function(){ return sb.from('checklist').select('*').order('ordem'); }),
+    lerTudo(function(){ return sb.from('anexos').select('*').order('id'); })
   ]).then(function(r){
     for(var i=0;i<r.length;i++) if(r[i].error) throw r[i].error;
     var obras=r[0].data||[], setores=r[1].data||[], assuntos=r[2].data||[],
@@ -2522,6 +2568,37 @@ function iniciar(sessao){
         '</div>';
     });
 }
+
+/* =====================================================================
+   AVISO DE NOVA VERSÃO
+   Sistema em página única fica aberto no celular por dias. Sem isso, a
+   pessoa continua rodando a versão de duas semanas atrás e jura que o
+   bug não foi corrigido.
+   ===================================================================== */
+(function(){
+  var avisando = false;
+  function conferir(){
+    if(avisando || document.hidden) return;
+    fetch('version.json?t='+Date.now(), {cache:'no-store'})
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(v){
+        if(!v || !v.versao || v.versao === APP_VERSAO) return;
+        avisando = true;
+        var f = document.createElement('div');
+        f.className = 'faixa-atualizar';
+        f.innerHTML = 'Nova versão disponível ('+esc(v.versao)+')'+
+                      '<button id="btn-atualizar">Atualizar agora</button>';
+        document.body.appendChild(f);
+        document.getElementById('btn-atualizar').addEventListener('click', function(){
+          location.reload(true);
+        });
+      })
+      .catch(function(){});   // sem internet: silêncio, tenta de novo depois
+  }
+  setInterval(conferir, 120000);
+  document.addEventListener('visibilitychange', conferir);
+  setTimeout(conferir, 8000);
+})();
 
 /* espera o Supabase resolver a sessão (inclusive a que vem no link do e-mail) */
 var iniciado = false;
