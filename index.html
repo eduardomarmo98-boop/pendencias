@@ -348,6 +348,10 @@
   .caixa h1{font-size:19px;font-weight:700;margin-bottom:6px;color:var(--azul)}
   .caixa .sub{color:var(--tinta3);font-size:13.5px;margin-bottom:20px;line-height:1.5}
   .caixa .btn{width:100%;margin-top:16px;padding:14px}
+  .caixa input{width:100%;padding:12px 13px;border:1px solid var(--linha);
+               border-radius:8px;font-size:16px}
+  .elo{font-size:13px;color:var(--azul);text-decoration:underline;text-align:left;padding:2px 0}
+  .elo:hover{color:var(--laranja-escuro)}
   .caixa-aviso{background:var(--branco);border-radius:16px;padding:28px;max-width:440px;
                box-shadow:0 20px 60px rgba(0,0,0,.4)}
   .caixa-aviso h1{font-size:17px;font-weight:700;margin-bottom:8px;color:var(--erro)}
@@ -376,17 +380,46 @@
 <div id="tela-login" class="porta oculto">
   <div class="caixa">
     <div class="logo-bm-azul" role="img" aria-label="Brandão &amp; Marmo Engenharia" style="height:40px;width:112px;margin:0 auto 22px"></div>
-    <h1>Gestão de Pendências</h1>
-    <p class="sub">Informe seu e-mail do escritório. Você recebe um link de acesso —
-    não há senha para memorizar.</p>
+    <h1 id="login-titulo">Gestão de Pendências</h1>
+    <p class="sub" id="login-sub">Entre com seu e-mail do escritório e sua senha.</p>
     <form id="form-login">
       <label class="primeiro" for="email-login">E-mail</label>
       <input type="email" id="email-login" required autocomplete="email"
-             inputmode="email" placeholder="nome@brandaoemarmo.com.br"
-             style="width:100%;padding:12px 13px;border:1px solid var(--linha);border-radius:8px;font-size:16px">
-      <button type="submit" class="btn btn-p" id="btn-login">Receber link de acesso</button>
+             inputmode="email" placeholder="nome@brandaoemarmo.com.br">
+      <div id="campo-senha">
+        <label for="senha-login">Senha</label>
+        <input type="password" id="senha-login" autocomplete="current-password"
+               placeholder="Sua senha">
+      </div>
+      <div id="campo-senha2" class="oculto">
+        <label for="senha2-login">Repita a senha</label>
+        <input type="password" id="senha2-login" autocomplete="new-password"
+               placeholder="Digite de novo">
+      </div>
+      <button type="submit" class="btn btn-p" id="btn-login">Entrar</button>
     </form>
     <div id="msg-login" class="dica" style="margin-top:14px"></div>
+    <div style="margin-top:16px;display:flex;flex-direction:column;gap:8px">
+      <button class="elo" id="ir-cadastro">Primeiro acesso — criar minha senha</button>
+      <button class="elo" id="ir-recuperar">Esqueci minha senha</button>
+      <button class="elo oculto" id="ir-entrar">← Voltar para o login</button>
+    </div>
+  </div>
+</div>
+
+<div id="tela-nova-senha" class="porta oculto">
+  <div class="caixa">
+    <div class="logo-bm-azul" role="img" aria-label="Brandão &amp; Marmo Engenharia" style="height:40px;width:112px;margin:0 auto 22px"></div>
+    <h1>Defina uma nova senha</h1>
+    <p class="sub">Escolha uma senha de pelo menos 8 caracteres.</p>
+    <form id="form-nova-senha">
+      <label class="primeiro" for="ns1">Nova senha</label>
+      <input type="password" id="ns1" required autocomplete="new-password">
+      <label for="ns2">Repita a nova senha</label>
+      <input type="password" id="ns2" required autocomplete="new-password">
+      <button type="submit" class="btn btn-p">Salvar senha</button>
+    </form>
+    <div id="msg-nova-senha" class="dica" style="margin-top:14px"></div>
   </div>
 </div>
 
@@ -501,7 +534,7 @@ if(SUPABASE_URL.indexOf('COLE_AQUI') === 0 || SUPABASE_KEY.indexOf('COLE_AQUI') 
 
 /* Versão. Uma constante só, referenciada em todo lugar — no BeMer ela
    vive em cinco pontos e vive dessincronizada. Formato AAAA.MM.DD.N. */
-var APP_VERSAO = '2026.07.29.1';
+var APP_VERSAO = '2026.07.29.2';
 
 var CHAVE = 'pendencias_bm_v3';
 var DB = null, EU = null, ABA = 'recebidas', SUB = 'setor';
@@ -2450,6 +2483,21 @@ function traduzErro(m){
   if(/Invalid path specified/i.test(m))
     return 'O endereço do Supabase está com barra a mais no final. '+
            'Abra o <b>index.html</b>, tire a barra do fim da linha <code>SUPABASE_URL</code> e publique de novo.';
+  if(/Invalid login credentials/i.test(m))
+    return 'E-mail ou senha incorretos. Se é seu primeiro acesso, use '+
+           '<b>“Primeiro acesso — criar minha senha”</b>.';
+  if(/Email not confirmed/i.test(m))
+    return 'Falta confirmar seu e-mail. Abra a mensagem que enviamos e clique no link. '+
+           'Confira o spam.';
+  if(/User already registered|already been registered/i.test(m))
+    return 'Este e-mail já tem acesso. Volte para o login, ou use '+
+           '<b>“Esqueci minha senha”</b> se não lembra a senha.';
+  if(/Password should be at least|weak.?password/i.test(m))
+    return 'Senha curta demais. Use pelo menos 8 caracteres.';
+  if(/same.?password|should be different/i.test(m))
+    return 'A nova senha precisa ser diferente da anterior.';
+  if(/Auth session missing|session_not_found|expired/i.test(m))
+    return 'O link expirou. Peça outro em <b>“Esqueci minha senha”</b>.';
   if(/Invalid API key|JWT/i.test(m))
     return 'A chave do Supabase está errada. Copie de novo o valor <b>anon public</b> '+
            'em Project Settings › API.';
@@ -2473,17 +2521,129 @@ function telaLogin(msg){
   if(msg) $('msg-login').innerHTML = msg;
 }
 
+/* =====================================================================
+   ENTRAR COM E-MAIL E SENHA
+   Três modos na mesma tela: entrar, primeiro acesso e recuperar senha.
+   ===================================================================== */
+var MODO = 'entrar';
+var MIN_SENHA = 8;
+
+function msgLogin(txt, cor){
+  $('msg-login').innerHTML = txt ? '<span style="color:var('+(cor||'--erro')+')">'+txt+'</span>' : '';
+}
+
+function trocarModo(novo){
+  MODO = novo;
+  msgLogin('');
+  var t = {
+    entrar:    ['Gestão de Pendências', 'Entre com seu e-mail do escritório e sua senha.', 'Entrar'],
+    cadastrar: ['Primeiro acesso', 'Crie sua senha. Você vai receber um e-mail para confirmar — só uma vez.', 'Criar minha senha'],
+    recuperar: ['Recuperar senha', 'Informe seu e-mail. Enviamos um link para você definir uma nova senha.', 'Enviar link']
+  }[novo];
+  $('login-titulo').textContent = t[0];
+  $('login-sub').textContent    = t[1];
+  $('btn-login').textContent    = t[2];
+  $('campo-senha').classList.toggle('oculto', novo === 'recuperar');
+  $('senha-login').setAttribute('autocomplete', novo === 'cadastrar' ? 'new-password' : 'current-password');
+  $('campo-senha2').classList.toggle('oculto', novo !== 'cadastrar');
+  $('ir-cadastro').classList.toggle('oculto', novo !== 'entrar');
+  $('ir-recuperar').classList.toggle('oculto', novo !== 'entrar');
+  $('ir-entrar').classList.toggle('oculto', novo === 'entrar');
+}
+$('ir-cadastro').addEventListener('click', function(){ trocarModo('cadastrar'); });
+$('ir-recuperar').addEventListener('click', function(){ trocarModo('recuperar'); });
+$('ir-entrar').addEventListener('click', function(){ trocarModo('entrar'); });
+
+/* Freio de tentativa, no espírito do que você já usa no BeMer.
+   Não substitui o limite do servidor — é para desestimular. */
+function chaveTrava(email){ return 'bm_pend_trava_' + email.toLowerCase(); }
+function travado(email){
+  try{
+    var t = JSON.parse(localStorage.getItem(chaveTrava(email)) || 'null');
+    if(t && t.ate > Date.now()) return Math.ceil((t.ate - Date.now())/60000);
+  }catch(e){}
+  return 0;
+}
+function contaErro(email){
+  try{
+    var k = chaveTrava(email);
+    var t = JSON.parse(localStorage.getItem(k) || '{"n":0}');
+    t.n = (t.n||0) + 1;
+    if(t.n >= 5){ t.ate = Date.now() + 5*60000; t.n = 0; }
+    localStorage.setItem(k, JSON.stringify(t));
+  }catch(e){}
+}
+function limpaErro(email){ try{ localStorage.removeItem(chaveTrava(email)); }catch(e){} }
+
 document.getElementById('form-login').addEventListener('submit', function(e){
   e.preventDefault();
-  var b = $('btn-login'), email = $('email-login').value.trim();
-  b.disabled = true; b.textContent = 'Enviando…';
-  sb.auth.signInWithOtp({ email:email,
-    options:{ emailRedirectTo: location.href.split('#')[0] } }).then(function(r){
-    b.disabled = false; b.textContent = 'Receber link de acesso';
-    $('msg-login').innerHTML = r.error
-      ? '<span style="color:var(--erro)">'+traduzErro(r.error.message)+'</span>'
-      : '<span style="color:var(--ok)">✓ Link enviado para <b>'+esc(email)+'</b>. '+
-        'Abra o e-mail e toque no link. Confira o spam se demorar.</span>';
+  var b = $('btn-login');
+  var email = $('email-login').value.trim();
+  var senha = $('senha-login').value;
+  var rotulo = b.textContent;
+
+  var espera = travado(email);
+  if(espera){ msgLogin('Muitas tentativas. Aguarde '+espera+' minuto'+(espera>1?'s':'')+
+    ' e tente de novo.'); return; }
+
+  function fim(){ b.disabled = false; b.textContent = rotulo; }
+  b.disabled = true; b.textContent = 'Aguarde…';
+  msgLogin('');
+
+  /* ---- recuperar senha ---- */
+  if(MODO === 'recuperar'){
+    sb.auth.resetPasswordForEmail(email, { redirectTo: location.href.split('#')[0] })
+      .then(function(r){
+        fim();
+        msgLogin(r.error ? traduzErro(r.error.message)
+          : '✓ Link enviado para <b>'+esc(email)+'</b>. Abra o e-mail e defina a nova senha. '+
+            'Confira o spam se demorar.', r.error ? '--erro' : '--ok');
+      });
+    return;
+  }
+
+  /* ---- primeiro acesso ---- */
+  if(MODO === 'cadastrar'){
+    if(senha.length < MIN_SENHA){ fim(); msgLogin('A senha precisa ter pelo menos '+MIN_SENHA+' caracteres.'); return; }
+    if(senha !== $('senha2-login').value){ fim(); msgLogin('As duas senhas não são iguais.'); return; }
+    sb.auth.signUp({ email:email, password:senha,
+      options:{ emailRedirectTo: location.href.split('#')[0] } }).then(function(r){
+      fim();
+      if(r.error) return msgLogin(traduzErro(r.error.message));
+      if(r.data && r.data.session){ location.reload(); return; }   // confirmação desligada
+      msgLogin('✓ Senha criada. Enviamos um e-mail de confirmação para <b>'+esc(email)+
+        '</b> — abra e clique no link. Depois disso você entra só com e-mail e senha.', '--ok');
+      trocarModo('entrar');
+    });
+    return;
+  }
+
+  /* ---- entrar ---- */
+  if(!senha){ fim(); msgLogin('Informe sua senha.'); return; }
+  sb.auth.signInWithPassword({ email:email, password:senha }).then(function(r){
+    if(r.error){
+      fim();
+      if(/Invalid login credentials/i.test(r.error.message)) contaErro(email);
+      return msgLogin(traduzErro(r.error.message));
+    }
+    limpaErro(email);
+    location.reload();
+  });
+});
+
+/* ---- definir nova senha (vindo do link de recuperação) ---- */
+document.getElementById('form-nova-senha').addEventListener('submit', function(e){
+  e.preventDefault();
+  var s1 = $('ns1').value, s2 = $('ns2').value;
+  var alvo = $('msg-nova-senha');
+  if(s1.length < MIN_SENHA){
+    alvo.innerHTML = '<span style="color:var(--erro)">A senha precisa ter pelo menos '+MIN_SENHA+' caracteres.</span>'; return; }
+  if(s1 !== s2){
+    alvo.innerHTML = '<span style="color:var(--erro)">As duas senhas não são iguais.</span>'; return; }
+  sb.auth.updateUser({ password:s1 }).then(function(r){
+    if(r.error){ alvo.innerHTML = '<span style="color:var(--erro)">'+traduzErro(r.error.message)+'</span>'; return; }
+    alvo.innerHTML = '<span style="color:var(--ok)">✓ Senha alterada. Entrando…</span>';
+    setTimeout(function(){ location.href = location.href.split('#')[0]; }, 1200);
   });
 });
 
@@ -2600,20 +2760,38 @@ function iniciar(sessao){
   setTimeout(conferir, 8000);
 })();
 
-/* espera o Supabase resolver a sessão (inclusive a que vem no link do e-mail) */
+/* =====================================================================
+   PARTIDA
+   Se a pessoa chegou pelo link de recuperação, o Supabase dispara
+   PASSWORD_RECOVERY — aí a tela é a de definir nova senha, não a do app.
+   ===================================================================== */
 var iniciado = false;
+var recuperando = location.hash.indexOf('type=recovery') >= 0;
+
+function telaNovaSenha(){
+  iniciado = true;
+  $('carregando').classList.add('oculto');
+  $('tela-login').classList.add('oculto');
+  $('tela-nova-senha').classList.remove('oculto');
+}
+
 sb.auth.onAuthStateChange(function(evt, sessao){
+  if(evt === 'PASSWORD_RECOVERY'){ telaNovaSenha(); return; }
   if(iniciado) return;
   if(evt === 'INITIAL_SESSION' || evt === 'SIGNED_IN'){
+    if(recuperando){ telaNovaSenha(); return; }
     iniciado = true;
     setTimeout(function(){ iniciar(sessao); }, 0);
   }
 });
 setTimeout(function(){
   if(iniciado) return;
+  if(recuperando){ telaNovaSenha(); return; }
   iniciado = true;
   sb.auth.getSession().then(function(r){ iniciar(r.data.session); });
 }, 3000);
+
+trocarModo('entrar');
 
 </script>
 </body>
