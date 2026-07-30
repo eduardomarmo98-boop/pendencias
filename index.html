@@ -535,7 +535,7 @@ if(SUPABASE_URL.indexOf('COLE_AQUI') === 0 || SUPABASE_KEY.indexOf('COLE_AQUI') 
 
 /* Versão. Uma constante só, referenciada em todo lugar — no BeMer ela
    vive em cinco pontos e vive dessincronizada. Formato AAAA.MM.DD.N. */
-var APP_VERSAO = '2026.07.29.3';
+var APP_VERSAO = '2026.07.29.4';
 
 var CHAVE = 'pendencias_bm_v3';
 var DB = null, EU = null, ABA = 'recebidas', SUB = 'setor';
@@ -1085,7 +1085,33 @@ function opcoesObras(sel){
 }
 function opcoesAssuntos(sel){
   return '<option value="">—</option>'+DB.assuntos.map(function(f){
-    return '<option'+(f===sel?' selected':'')+'>'+esc(f)+'</option>'; }).join('');
+    return '<option'+(f===sel?' selected':'')+'>'+esc(f)+'</option>'; }).join('')+
+    '<option value="__novo">+ Cadastrar novo assunto…</option>';
+}
+
+/* Deixa criar assunto sem sair do formulário. O item novo entra na lista
+   e passa a valer para todo mundo — é o que mantém o painel por assunto
+   confiável, em vez de cada um digitar do seu jeito. */
+function ligarNovoAssunto(m){
+  var sel = m.querySelector('#n-assunto');
+  var cx  = m.querySelector('#n-assunto-novo');
+  if(!sel || !cx) return;
+  sel.addEventListener('change', function(){
+    var novo = sel.value === '__novo';
+    cx.classList.toggle('oculto', !novo);
+    if(novo) cx.querySelector('input').focus();
+  });
+}
+function assuntoEscolhido(m){
+  var sel = m.querySelector('#n-assunto');
+  if(sel.value !== '__novo') return Promise.resolve(sel.value);
+  var txt = m.querySelector('#n-assunto-novo input').value.trim();
+  if(!txt) return Promise.reject(new Error('Escreva o nome do novo assunto.'));
+  if(txt.length > 80) return Promise.reject(new Error('Assunto muito longo.'));
+  var existente = DB.assuntos.filter(function(a){
+    return a.toLowerCase() === txt.toLowerCase(); })[0];
+  if(existente) return Promise.resolve(existente);
+  return Admin.listaIncluir('assuntos', txt).then(function(){ return txt; });
 }
 
 /* ---------------- nova pendência ---------------- */
@@ -1101,7 +1127,10 @@ $('btn-nova').addEventListener('click', function(){
     '<div class="dica">Selecione a si mesmo para registrar uma pendência própria.</div>'+
     '<div class="dupla">'+
     '<div><label>Obra</label><select id="n-obra">'+opcoesObras('')+'</select></div>'+
-    '<div><label>Assunto</label><select id="n-assunto">'+opcoesAssuntos('')+'</select></div></div>'+
+    '<div><label>Assunto</label><select id="n-assunto">'+opcoesAssuntos('')+'</select>'+
+    '<div id="n-assunto-novo" class="oculto" style="margin-top:7px">'+
+    '<input type="text" maxlength="80" placeholder="Nome do novo assunto">'+
+    '<div class="dica">Fica disponível para todo mundo daqui em diante.</div></div></div></div>'+
     '<div class="dupla">'+
     '<div><label>Prioridade</label><select id="n-prio">'+
     '<option value="baixa">Baixa</option><option value="media" selected>Média</option>'+
@@ -1120,6 +1149,8 @@ $('btn-nova').addEventListener('click', function(){
     '</div><div class="modal-rodape"><button type="submit" class="btn btn-p">Registrar pendência</button>'+
     '<button type="button" class="btn btn-s fechar">Cancelar</button></div></form>');
 
+  ligarNovoAssunto(m);
+
   function pintarRascunho(){
     m.querySelector('#n-lista').innerHTML = rascunho.map(function(a,i){
       return '<span class="chip">'+(a.tipo.indexOf('image/')===0?'🖼':'📄')+' '+esc(a.nome)+
@@ -1136,21 +1167,24 @@ $('btn-nova').addEventListener('click', function(){
 
   m.querySelector('#f-nova').addEventListener('submit', function(e){
     e.preventDefault();
-    var dados = {
-      titulo: m.querySelector('#n-titulo').value,
-      descricao: m.querySelector('#n-desc').value,
-      responsavel_id: m.querySelector('#n-resp').value,
-      obra_id: m.querySelector('#n-obra').value,
-      frente: m.querySelector('#n-assunto').value,
-      prioridade: m.querySelector('#n-prio').value,
-      recorrencia: m.querySelector('#n-recor').value
-    };
     var chk = m.querySelector('#n-chk').value.split('\n')
       .map(function(s){ return s.trim(); }).filter(Boolean)
       .map(function(t){ return {id:uid(), texto:t, feito:false}; });
     var bt = m.querySelector('#f-nova button[type=submit]');
+    var dados;
     bt.disabled = true;
-    Dados.novaPendencia(dados, chk, rascunho).then(function(){
+    assuntoEscolhido(m).then(function(assunto){
+      dados = {
+        titulo: m.querySelector('#n-titulo').value,
+        descricao: m.querySelector('#n-desc').value,
+        responsavel_id: m.querySelector('#n-resp').value,
+        obra_id: m.querySelector('#n-obra').value,
+        frente: assunto,
+        prioridade: m.querySelector('#n-prio').value,
+        recorrencia: m.querySelector('#n-recor').value
+      };
+      return Dados.novaPendencia(dados, chk, rascunho);
+    }).then(function(){
       m.remove(); desenhar();
       aviso('Pendência registrada. '+pessoa(dados.responsavel_id).nome.split(' ')[0]+
             ' vai assumir o prazo.','ok');
