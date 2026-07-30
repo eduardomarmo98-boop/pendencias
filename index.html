@@ -382,6 +382,8 @@
     <div class="logo-bm-azul" role="img" aria-label="Brandão &amp; Marmo Engenharia" style="height:40px;width:112px;margin:0 auto 22px"></div>
     <h1 id="login-titulo">Gestão de Pendências</h1>
     <p class="sub" id="login-sub">Entre com seu e-mail do escritório e sua senha.</p>
+    <div class="dica" style="margin:-12px 0 16px">O acesso é criado pela Diretoria ou pelo TI.
+    Se ainda não tem senha, use o link abaixo.</div>
     <form id="form-login">
       <label class="primeiro" for="email-login">E-mail</label>
       <input type="email" id="email-login" required autocomplete="email"
@@ -400,8 +402,7 @@
     </form>
     <div id="msg-login" class="dica" style="margin-top:14px"></div>
     <div style="margin-top:16px;display:flex;flex-direction:column;gap:8px">
-      <button class="elo" id="ir-cadastro">Primeiro acesso — criar minha senha</button>
-      <button class="elo" id="ir-recuperar">Esqueci minha senha</button>
+      <button class="elo" id="ir-recuperar">Primeiro acesso ou esqueci minha senha</button>
       <button class="elo oculto" id="ir-entrar">← Voltar para o login</button>
     </div>
   </div>
@@ -534,7 +535,7 @@ if(SUPABASE_URL.indexOf('COLE_AQUI') === 0 || SUPABASE_KEY.indexOf('COLE_AQUI') 
 
 /* Versão. Uma constante só, referenciada em todo lugar — no BeMer ela
    vive em cinco pontos e vive dessincronizada. Formato AAAA.MM.DD.N. */
-var APP_VERSAO = '2026.07.29.2';
+var APP_VERSAO = '2026.07.29.3';
 
 var CHAVE = 'pendencias_bm_v3';
 var DB = null, EU = null, ABA = 'recebidas', SUB = 'setor';
@@ -561,11 +562,12 @@ var CAUSAS = {
 var RECOR = { '':'Não se repete', semanal:'Toda semana', quinzenal:'A cada 15 dias',
               mensal:'Todo mês', bimestral:'A cada 2 meses' };
 
-var PAPEIS = { colaborador:'Colaborador', gestor:'Gestor', diretor:'Diretor' };
+var PAPEIS = { colaborador:'Colaborador', gestor:'Gestor', ti:'TI', diretor:'Diretor' };
 var PAPEL_DESC = {
   colaborador:'Colaborador — usa o sistema, sem acesso ao painel gerencial',
   gestor:'Gestor — acessa o painel gerencial',
-  diretor:'Diretor — acessa o painel e administra obras, equipe e cadastros'
+  ti:'TI — painel e gerência de usuários (não mexe em obras nem cadastros)',
+  diretor:'Diretor — painel e administra usuários, obras e cadastros'
 };
 
 /* ---------------- utilidades ---------------- */
@@ -589,6 +591,8 @@ function obra(id){ if(!id) return null;
   for(var i=0;i<DB.obras.length;i++) if(DB.obras[i].id===id) return DB.obras[i]; return null; }
 function pend(id){ for(var i=0;i<DB.pendencias.length;i++) if(DB.pendencias[i].id===id) return DB.pendencias[i]; return null; }
 function ehAdmin(){ return EU.papel==='diretor'; }
+/* Diretoria e TI criam e editam pessoas. Só a Diretoria mexe em obras e cadastros. */
+function gereUsuarios(){ return EU.papel==='diretor' || EU.papel==='ti'; }
 
 function aviso(txt, tipo){
   var d = document.createElement('div');
@@ -1745,8 +1749,8 @@ var Admin = {
     return Promise.resolve(salvar());
   },
   pessoaNova: function(d){
-    DB.colaboradores.push({id:uid(), nome:d.nome, setor:d.setor, cargo:d.cargo,
-                           papel:d.papel, ativo:true, obras:[]});
+    DB.colaboradores.push({id:uid(), nome:d.nome, email:d.email||'', setor:d.setor,
+                           cargo:d.cargo, papel:d.papel, ativo:true, obras:[]});
     return Promise.resolve(salvar());
   },
   pessoaCampo: function(c, campo, valor){ c[campo] = valor; return Promise.resolve(salvar()); },
@@ -1835,18 +1839,27 @@ $('btn-equipe').addEventListener('click', function(){
     'Se você marcar obras específicas para alguém, essa pessoa passa a ver só as obras marcadas — '+
     'mais os assuntos internos e o que ela mesma criou ou recebeu.</div>'+
     '<div class="rolagem"><table><thead><tr><th>Nome</th><th>Setor</th>'+
-    '<th>Acesso</th><th>Obras que enxerga</th>'+(ehAdmin()?'<th></th>':'')+
+    '<th>Acesso</th><th>Obras que enxerga</th>'+(gereUsuarios()?'<th></th>':'')+
     '</tr></thead><tbody id="tb-eq"></tbody></table></div>'+
-    (ehAdmin() ? '<h3 class="secao">Adicionar pessoa</h3>'+
+    (gereUsuarios() ? '<h3 class="secao">Criar acesso</h3>'+
+      '<div class="dica" style="margin-bottom:10px">A pessoa recebe um e-mail para definir a própria senha. '+
+      'Ninguém se cadastra sozinho.</div>'+
       '<form id="f-pessoa"><div class="dupla">'+
-      '<div><label class="primeiro">Nome</label><input type="text" id="e-nome" required placeholder="Nome completo"></div>'+
-      '<div><label class="primeiro">Setor</label><select id="e-setor">'+
-        DB.setores.map(function(s){ return '<option>'+esc(s)+'</option>'; }).join('')+'</select></div></div>'+
-      '<div class="dupla"><div><label>Cargo</label><input type="text" id="e-cargo" placeholder="Ex.: Engenheiro de obra"></div>'+
-      '<div><label>Nível de acesso</label><select id="e-papel">'+
-        Object.keys(PAPEL_DESC).map(function(k){ return '<option value="'+k+'">'+esc(PAPEL_DESC[k])+'</option>'; }).join('')+
-      '</select></div></div>'+
-      '<button type="submit" class="btn btn-p" style="margin-top:14px">Adicionar</button></form>' : '')+
+      '<div><label class="primeiro">Nome completo</label><input type="text" id="e-nome" required placeholder="Ex.: Ana Ribeiro"></div>'+
+      '<div><label class="primeiro">E-mail do escritório</label>'+
+      '<input type="email" id="e-email" required placeholder="nome@brandaoemarmo.com.br"></div></div>'+
+      '<div class="dupla">'+
+      '<div><label>Setor</label><select id="e-setor">'+
+        DB.setores.map(function(s){ return '<option>'+esc(s)+'</option>'; }).join('')+'</select></div>'+
+      '<div><label>Cargo</label><input type="text" id="e-cargo" placeholder="Ex.: Engenheira de obra"></div></div>'+
+      '<label>Nível de acesso</label><select id="e-papel">'+
+        Object.keys(PAPEL_DESC).filter(function(k){
+          return ehAdmin() || (k!=='diretor' && k!=='ti'); }).map(function(k){
+          return '<option value="'+k+'">'+esc(PAPEL_DESC[k])+'</option>'; }).join('')+
+      '</select>'+
+      (ehAdmin() ? '' : '<div class="dica">Só a Diretoria cria acesso de Diretoria ou TI.</div>')+
+      '<button type="submit" class="btn btn-p" style="margin-top:14px">Criar acesso e enviar e-mail</button>'+
+      '</form>' : '')+
     '</div><div class="modal-rodape"><span style="flex:1"></span><button class="btn btn-s fechar">Fechar</button></div>', true);
 
   function pintar(){
@@ -1854,16 +1867,16 @@ $('btn-equipe').addEventListener('click', function(){
       var quant = c.obras.length;
       return '<tr style="'+(c.ativo?'':'opacity:.45')+'"><td><b>'+esc(c.nome)+'</b>'+
         (c.cargo?'<div class="dica" style="margin:2px 0 0">'+esc(c.cargo)+'</div>':'')+'</td>'+
-        '<td data-l="Setor"><select data-setor="'+c.id+'" style="padding:5px 7px;font-size:13px"'+(ehAdmin()?'':' disabled')+'>'+
+        '<td data-l="Setor"><select data-setor="'+c.id+'" style="padding:5px 7px;font-size:13px"'+(gereUsuarios()?'':' disabled')+'>'+
           DB.setores.map(function(s){ return '<option'+(c.setor===s?' selected':'')+'>'+esc(s)+'</option>'; }).join('')+
           (DB.setores.indexOf(c.setor)<0?'<option selected>'+esc(c.setor)+'</option>':'')+'</select></td>'+
-        '<td data-l="Acesso"><select data-papel="'+c.id+'" style="padding:5px 7px;font-size:13px"'+(ehAdmin()?'':' disabled')+'>'+
+        '<td data-l="Acesso"><select data-papel="'+c.id+'" style="padding:5px 7px;font-size:13px"'+(gereUsuarios()?'':' disabled')+'>'+
           Object.keys(PAPEIS).map(function(k){ return '<option value="'+k+'"'+(c.papel===k?' selected':'')+'>'+
             esc(PAPEIS[k])+'</option>'; }).join('')+'</select></td>'+
         '<td data-l="Enxerga"><button class="link-topo" data-obras="'+c.id+'" style="color:'+
           (quant?'var(--azul)':'var(--tinta3)')+';border-color:var(--linha)">'+
           (quant ? quant+(quant===1?' obra':' obras') : 'Todas as obras')+'</button></td>'+
-        (ehAdmin()?'<td data-l="Situação"><button class="link-topo" data-tog="'+c.id+
+        (gereUsuarios()?'<td data-l="Situação"><button class="link-topo" data-tog="'+c.id+
           '" style="color:var(--tinta3);border-color:var(--linha)">'+
           (c.ativo?'Desativar':'Reativar')+'</button></td>':'')+'</tr>';
     }).join('');
@@ -1892,12 +1905,17 @@ $('btn-equipe').addEventListener('click', function(){
 
   if(m.querySelector('#f-pessoa')) m.querySelector('#f-pessoa').addEventListener('submit', function(e){
     e.preventDefault();
-    var f = this;
+    var f = this, bt = f.querySelector('button[type=submit]');
+    var campoEmail = m.querySelector('#e-email');
+    bt.disabled = true; bt.textContent = 'Criando…';
     Admin.pessoaNova({ nome:m.querySelector('#e-nome').value.trim(),
+      email: campoEmail ? campoEmail.value.trim() : '',
       setor:m.querySelector('#e-setor').value, cargo:m.querySelector('#e-cargo').value.trim(),
       papel:m.querySelector('#e-papel').value })
-      .then(function(){ f.reset(); pintar(); desenhar(); aviso('Pessoa adicionada.','ok'); })
-      .catch(function(err){ aviso(err.message||String(err),'erro'); });
+      .then(function(){ f.reset(); pintar(); desenhar();
+        aviso('Acesso criado. A pessoa recebeu o e-mail para definir a senha.','ok'); })
+      .catch(function(err){ aviso(err.message||String(err),'erro'); })
+      .then(function(){ bt.disabled = false; bt.textContent = 'Criar acesso e enviar e-mail'; });
   });
 });
 
@@ -2424,10 +2442,21 @@ Admin = {
     o.status = novo;
     return envio(sb.from('obras').update({status:novo}).eq('id', o.id), 'a obra');
   },
-  pessoaNova: function(){
-    return Promise.reject(new Error(
-      'Aqui ninguém é cadastrado à mão: a pessoa entra sozinha na primeira vez que abrir o link. '+
-      'Depois disso ela aparece nesta lista e você define setor e nível de acesso.'));
+  pessoaNova: function(d){
+    if(!d.email || d.email.toLowerCase().indexOf('@brandaoemarmo.com.br') < 0)
+      return Promise.reject(new Error('Use um e-mail @brandaoemarmo.com.br.'));
+    return sb.functions.invoke('criar-usuario', {
+      body: { email:d.email.trim().toLowerCase(), nome:d.nome, setor:d.setor,
+              cargo:d.cargo, papel:d.papel, redirect: location.href.split('#')[0] }
+    }).then(function(r){
+      var dados = r.data || {};
+      if(r.error || dados.erro){
+        var m = dados.erro || (r.error && r.error.message) || 'Falha ao criar o acesso.';
+        throw new Error(m);
+      }
+      if(dados.aviso) aviso(dados.aviso, 'erro');
+      return recarregarTudo();
+    });
   },
   pessoaCampo: function(c, campo, valor){
     c[campo] = valor;
@@ -2527,6 +2556,8 @@ function telaLogin(msg){
    ===================================================================== */
 var MODO = 'entrar';
 var MIN_SENHA = 8;
+/* Não existe autocadastro: a conta é criada pela Diretoria ou pelo TI.
+   Quem nunca definiu senha usa o mesmo caminho de "esqueci a senha". */
 
 function msgLogin(txt, cor){
   $('msg-login').innerHTML = txt ? '<span style="color:var('+(cor||'--erro')+')">'+txt+'</span>' : '';
@@ -2537,20 +2568,18 @@ function trocarModo(novo){
   msgLogin('');
   var t = {
     entrar:    ['Gestão de Pendências', 'Entre com seu e-mail do escritório e sua senha.', 'Entrar'],
-    cadastrar: ['Primeiro acesso', 'Crie sua senha. Você vai receber um e-mail para confirmar — só uma vez.', 'Criar minha senha'],
-    recuperar: ['Recuperar senha', 'Informe seu e-mail. Enviamos um link para você definir uma nova senha.', 'Enviar link']
+    recuperar: ['Definir minha senha',
+                'Informe seu e-mail. Enviamos um link para você criar ou trocar a senha. '+
+                'Só funciona se a Diretoria ou o TI já tiver criado seu acesso.', 'Enviar link']
   }[novo];
   $('login-titulo').textContent = t[0];
   $('login-sub').textContent    = t[1];
   $('btn-login').textContent    = t[2];
   $('campo-senha').classList.toggle('oculto', novo === 'recuperar');
-  $('senha-login').setAttribute('autocomplete', novo === 'cadastrar' ? 'new-password' : 'current-password');
-  $('campo-senha2').classList.toggle('oculto', novo !== 'cadastrar');
-  $('ir-cadastro').classList.toggle('oculto', novo !== 'entrar');
+  $('campo-senha2').classList.add('oculto');
   $('ir-recuperar').classList.toggle('oculto', novo !== 'entrar');
   $('ir-entrar').classList.toggle('oculto', novo === 'entrar');
 }
-$('ir-cadastro').addEventListener('click', function(){ trocarModo('cadastrar'); });
 $('ir-recuperar').addEventListener('click', function(){ trocarModo('recuperar'); });
 $('ir-entrar').addEventListener('click', function(){ trocarModo('entrar'); });
 
@@ -2599,22 +2628,6 @@ document.getElementById('form-login').addEventListener('submit', function(e){
           : '✓ Link enviado para <b>'+esc(email)+'</b>. Abra o e-mail e defina a nova senha. '+
             'Confira o spam se demorar.', r.error ? '--erro' : '--ok');
       });
-    return;
-  }
-
-  /* ---- primeiro acesso ---- */
-  if(MODO === 'cadastrar'){
-    if(senha.length < MIN_SENHA){ fim(); msgLogin('A senha precisa ter pelo menos '+MIN_SENHA+' caracteres.'); return; }
-    if(senha !== $('senha2-login').value){ fim(); msgLogin('As duas senhas não são iguais.'); return; }
-    sb.auth.signUp({ email:email, password:senha,
-      options:{ emailRedirectTo: location.href.split('#')[0] } }).then(function(r){
-      fim();
-      if(r.error) return msgLogin(traduzErro(r.error.message));
-      if(r.data && r.data.session){ location.reload(); return; }   // confirmação desligada
-      msgLogin('✓ Senha criada. Enviamos um e-mail de confirmação para <b>'+esc(email)+
-        '</b> — abra e clique no link. Depois disso você entra só com e-mail e senha.', '--ok');
-      trocarModo('entrar');
-    });
     return;
   }
 
