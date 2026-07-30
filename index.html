@@ -535,7 +535,7 @@ if(SUPABASE_URL.indexOf('COLE_AQUI') === 0 || SUPABASE_KEY.indexOf('COLE_AQUI') 
 
 /* Versão. Uma constante só, referenciada em todo lugar — no BeMer ela
    vive em cinco pontos e vive dessincronizada. Formato AAAA.MM.DD.N. */
-var APP_VERSAO = '2026.07.29.4';
+var APP_VERSAO = '2026.07.29.5';
 
 var CHAVE = 'pendencias_bm_v3';
 var DB = null, EU = null, ABA = 'recebidas', SUB = 'setor';
@@ -2486,6 +2486,12 @@ Admin = {
       var dados = r.data || {};
       if(r.error || dados.erro){
         var m = dados.erro || (r.error && r.error.message) || 'Falha ao criar o acesso.';
+        if(/Failed to send a request|Failed to fetch|FunctionsFetchError/i.test(m))
+          m = 'A função "criar-usuario" ainda não foi publicada no Supabase. '+
+              'Vá em Edge Functions › Deploy a new function, use esse nome exato e cole o arquivo '+
+              'edge-function-criar-usuario.ts.';
+        else if(/non-2xx|FunctionsHttpError/i.test(m))
+          m = 'A função respondeu com erro. Veja Edge Functions › criar-usuario › Logs para o motivo.';
         throw new Error(m);
       }
       if(dados.aviso) aviso(dados.aviso, 'erro');
