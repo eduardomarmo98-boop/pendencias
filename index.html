@@ -535,7 +535,7 @@ if(SUPABASE_URL.indexOf('COLE_AQUI') === 0 || SUPABASE_KEY.indexOf('COLE_AQUI') 
 
 /* Versão. Uma constante só, referenciada em todo lugar — no BeMer ela
    vive em cinco pontos e vive dessincronizada. Formato AAAA.MM.DD.N. */
-var APP_VERSAO = '2026.09.06.2';
+var APP_VERSAO = '2026.09.06.3';
 
 var CHAVE = 'pendencias_bm_v3';
 var DB = null, EU = null, ABA = 'recebidas', SUB = 'setor';
@@ -1525,12 +1525,31 @@ var Anexos = {
       };
       if((f.type||'').indexOf('image/')===0)
         Anexos.comprimir(f, function(d,t,orig){ fim(d,t,'image/jpeg',orig); });
+      /* PDF pesado: só a versão publicada compacta, porque depende de
+         biblioteca externa e a versão local roda sem internet. */
+      else if(Anexos.comprimirPDF && f.type === 'application/pdf'
+              && f.size > Anexos.PDF_LIMIAR){
+        if(f.size > Anexos.PDF_MAXIMO){
+          aviso('"'+f.name+'" tem '+kb(f.size)+' — grande demais até para compactar. '+
+                'Divida o arquivo ou envie só as páginas que importam.','erro');
+          fim(null); return;
+        }
+        Anexos.comprimirPDF(f, function(d,t,orig){
+          if(!d){ aviso('Não consegui compactar "'+f.name+'". Subindo o original.',''); }
+          if(d && t > Anexos.LIMITE){
+            aviso('"'+f.name+'" ficou com '+kb(t)+' mesmo compactado, acima do limite de '+
+                  kb(Anexos.LIMITE)+'.','erro');
+            fim(null); return;
+          }
+          fim(d, t, 'application/pdf', orig);
+        });
+      }
       else if(f.size > Anexos.LIMITE){
         aviso('"'+f.name+'" tem '+kb(f.size)+' e passa do limite de '+kb(Anexos.LIMITE)+'. '+
               'Se for documento digitalizado, fotografar costuma resolver — a foto é compactada.','erro');
         fim(null);
       } else {
-        if(f.size > 1024*1024)
+        if(f.size > 1024*1024 && f.type !== 'application/pdf')
           aviso('"'+f.name+'" tem '+kb(f.size)+'. Arquivo que não é imagem sobe sem compactação.','');
         var r = new FileReader();
         r.onload = function(){ fim(r.result, f.size); };
@@ -2473,6 +2492,113 @@ Anexos.enviar = function(lista, pendenciaId, notaId){
         nome:a.nome, tipo:a.tipo, tamanho:a.tamanho, caminho:caminho, por:EU.id });
     }).then(function(r){ if(r && r.error) throw r.error; });
   }));
+};
+
+/* =====================================================================
+   COMPACTAÇÃO DE PDF
+
+   PDF digitalizado é um monte de foto dentro de uma caixa — é daí que
+   vem o peso. O único jeito de reduzir no navegador é redesenhar cada
+   página em imagem e remontar o arquivo.
+
+   O que se perde: o texto deixa de ser selecionável e pesquisável, e
+   assinatura digital é invalidada. Aqui isso é aceitável porque o
+   sistema é canal de comunicação — o documento com valor legal vive
+   no lugar dele, não aqui. Se um dia precisar preservar assinatura, o
+   caminho é Ghostscript no servidor, não no navegador.
+
+   As bibliotecas são carregadas só quando alguém anexa um PDF grande,
+   para não pesar a abertura do sistema.
+   ===================================================================== */
+Anexos.PDF_LIMIAR = 1.2*1024*1024;   // abaixo disso não vale a pena
+Anexos.PDF_MAXIMO = 40*1024*1024;    // acima disso o navegador não dá conta
+Anexos.PDF_LARGURA = 1240;           // ~150 dpi em A4: legível e leve
+Anexos.PDF_QUALIDADE = 0.68;
+
+var PDFJS_URL  = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js';
+var PDFJS_WKR  = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+var PDFLIB_URL = 'https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js';
+
+function carregarScript(url){
+  return new Promise(function(ok, erro){
+    var s = document.createElement('script');
+    s.src = url; s.async = true;
+    s.onload = ok;
+    s.onerror = function(){ erro(new Error('Falha ao carregar '+url)); };
+    document.head.appendChild(s);
+  });
+}
+
+var promessaLibsPdf = null;
+Anexos.carregarLibsPdf = function(){
+  if(promessaLibsPdf) return promessaLibsPdf;
+  promessaLibsPdf = Promise.all([
+    window.pdfjsLib ? Promise.resolve() : carregarScript(PDFJS_URL),
+    window.PDFLib   ? Promise.resolve() : carregarScript(PDFLIB_URL)
+  ]).then(function(){
+    if(!window.pdfjsLib || !window.PDFLib) throw new Error('Bibliotecas de PDF indisponíveis.');
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_WKR;
+  });
+  return promessaLibsPdf;
+};
+
+/* Devolve (dados, tamanho, original). Com dados nulo, o chamador sobe
+   o arquivo como veio — nunca deixa o usuário na mão por causa disso. */
+Anexos.comprimirPDF = function(file, pronto){
+  var original = file.size;
+
+  function desistir(){
+    var r = new FileReader();
+    r.onload = function(){ pronto(r.result, original, original); };
+    r.onerror = function(){ pronto(null, original, original); };
+    r.readAsDataURL(file);
+  }
+
+  aviso('Compactando "'+file.name+'"…','');
+
+  Anexos.carregarLibsPdf()
+    .then(function(){ return file.arrayBuffer(); })
+    .then(function(buf){
+      return window.pdfjsLib.getDocument({ data: buf, disableFontFace: true }).promise;
+    })
+    .then(function(doc){
+      var novo = window.PDFLib.PDFDocument.create();
+      var paginas = Math.min(doc.numPages, 200);   // trava de segurança
+      return novo.then(function(pdfNovo){
+        var seq = Promise.resolve();
+        for(var i=1;i<=paginas;i++) (function(n){
+          seq = seq.then(function(){
+            return doc.getPage(n).then(function(pag){
+              var v1 = pag.getViewport({ scale: 1 });
+              var escala = Math.min(Anexos.PDF_LARGURA / v1.width, 2);
+              var vp = pag.getViewport({ scale: escala });
+              var cv = document.createElement('canvas');
+              cv.width = Math.round(vp.width); cv.height = Math.round(vp.height);
+              var ctx = cv.getContext('2d');
+              ctx.fillStyle = '#fff'; ctx.fillRect(0,0,cv.width,cv.height);
+              return pag.render({ canvasContext: ctx, viewport: vp }).promise.then(function(){
+                var jpg = cv.toDataURL('image/jpeg', Anexos.PDF_QUALIDADE);
+                return pdfNovo.embedJpg(jpg).then(function(img){
+                  var p = pdfNovo.addPage([img.width, img.height]);
+                  p.drawImage(img, { x:0, y:0, width:img.width, height:img.height });
+                });
+              });
+            });
+          });
+        })(i);
+        return seq.then(function(){ return pdfNovo.saveAsBase64({ dataUri:true }); });
+      });
+    })
+    .then(function(dataUri){
+      var tam = Math.round(dataUri.length * 0.75);
+      if(tam >= original){ desistir(); return; }        // não melhorou: mantém
+      aviso('"'+file.name+'": '+kb(original)+' → '+kb(tam)+'.','ok');
+      pronto(dataUri, tam, original);
+    })
+    .catch(function(e){
+      console.warn('[pdf] compactação falhou:', e && e.message);
+      desistir();
+    });
 };
 
 /* =====================================================================
