@@ -160,7 +160,7 @@
   .anexos{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
   .anexo{border:1px solid var(--linha);border-radius:9px;padding:7px 10px;font-size:12.5px;display:flex;
          align-items:center;gap:8px;background:var(--branco);max-width:225px}
-  .anexo img{width:34px;height:34px;object-fit:cover;border-radius:5px;flex-shrink:0}
+  .anexo img{width:34px;height:34px;object-fit:cover;border-radius:5px;flex-shrink:0;background:var(--neutro-bg)}
   .anexo .ic{width:34px;height:34px;background:var(--neutro-bg);border-radius:5px;display:flex;align-items:center;
              justify-content:center;font-size:16px;flex-shrink:0}
   .anexo .inf{min-width:0;flex:1}
@@ -169,6 +169,7 @@
   .pendentes{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
   .chip{background:var(--neutro-bg);border-radius:16px;padding:4px 10px;font-size:12px;display:flex;align-items:center;gap:6px}
   .chip button{color:var(--tinta3);font-size:15px;line-height:1}
+  .chip .peso{color:var(--tinta3);font-size:11.5px;font-weight:400}
 
   .aviso{background:var(--laranja-bg);color:var(--laranja-escuro);border-radius:8px;padding:10px 13px;font-size:13px;margin-bottom:14px;line-height:1.45}
   .aviso-erro{background:var(--erro-bg);color:var(--erro)}
@@ -506,8 +507,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.js"></script>
 <script>
 /* =====================================================================
-   CONFIGURAÇÃO — troque os dois valores abaixo pelos do seu projeto
-   Supabase (Project Settings › API). Veja o guia, passo 4.
+   CONFIGURAÇÃO — Project Settings › API do seu projeto Supabase.
    ===================================================================== */
 var SUPABASE_URL = 'https://eifulvuinphxjjakanfb.supabase.co';
 var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVpZnVsdnVpbnBoeGpqYWthbmZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUzMzYwOTIsImV4cCI6MjEwMDkxMjA5Mn0.4Z89dWgI-Q7fy06Ol5qS2GHSXZ3dBnfHXg6xENDjlU8';
@@ -519,7 +519,7 @@ if(SUPABASE_URL.indexOf('COLE_AQUI') === 0 || SUPABASE_KEY.indexOf('COLE_AQUI') 
     '<div class="caixa-aviso"><h1>Falta conectar ao banco de dados</h1>'+
     '<p>O arquivo <b>index.html</b> ainda está com os valores de exemplo. Abra-o, procure as duas '+
     'linhas <code>SUPABASE_URL</code> e <code>SUPABASE_KEY</code> e substitua pelos valores do seu '+
-    'projeto Supabase, mantendo as aspas. É o passo 4 do guia.</p></div>';
+    'projeto Supabase, mantendo as aspas.</p></div>';
   throw new Error('Configuração do Supabase pendente.');
 }
 
@@ -535,7 +535,7 @@ if(SUPABASE_URL.indexOf('COLE_AQUI') === 0 || SUPABASE_KEY.indexOf('COLE_AQUI') 
 
 /* Versão. Uma constante só, referenciada em todo lugar — no BeMer ela
    vive em cinco pontos e vive dessincronizada. Formato AAAA.MM.DD.N. */
-var APP_VERSAO = '2026.07.29.5';
+var APP_VERSAO = '2026.09.06.2';
 
 var CHAVE = 'pendencias_bm_v3';
 var DB = null, EU = null, ABA = 'recebidas', SUB = 'setor';
@@ -585,11 +585,17 @@ function paraInput(iso){ if(!iso) return ''; var d=new Date(iso);
 function diasEntre(a,b){ return Math.round((new Date(b)-new Date(a))/86400000); }
 function kb(n){ return n<1024 ? n+' B' : n<1048576 ? (n/1024).toFixed(0)+' KB' : (n/1048576).toFixed(1)+' MB'; }
 
-function pessoa(id){ for(var i=0;i<DB.colaboradores.length;i++) if(DB.colaboradores[i].id===id) return DB.colaboradores[i];
+/* ATENÇÃO — comparação sempre com String() dos dois lados.
+   O DOM (select.value, dataset.*) devolve TEXTO; o Postgres devolve
+   NÚMERO. Na versão local os ids vêm de uid() e são texto, então o
+   bug some no teste e aparece só em produção. Não troque por ===. */
+function mesmoId(a, b){ return String(a) === String(b); }
+
+function pessoa(id){ for(var i=0;i<DB.colaboradores.length;i++) if(mesmoId(DB.colaboradores[i].id, id)) return DB.colaboradores[i];
   return {id:id, nome:'(removido)', setor:'—', papel:'colaborador', ativo:false, obras:[]}; }
 function obra(id){ if(!id) return null;
-  for(var i=0;i<DB.obras.length;i++) if(DB.obras[i].id===id) return DB.obras[i]; return null; }
-function pend(id){ for(var i=0;i<DB.pendencias.length;i++) if(DB.pendencias[i].id===id) return DB.pendencias[i]; return null; }
+  for(var i=0;i<DB.obras.length;i++) if(mesmoId(DB.obras[i].id, id)) return DB.obras[i]; return null; }
+function pend(id){ for(var i=0;i<DB.pendencias.length;i++) if(mesmoId(DB.pendencias[i].id, id)) return DB.pendencias[i]; return null; }
 function ehAdmin(){ return EU.papel==='diretor'; }
 /* Diretoria e TI criam e editam pessoas. Só a Diretoria mexe em obras e cadastros. */
 function gereUsuarios(){ return EU.papel==='diretor' || EU.papel==='ti'; }
@@ -1007,7 +1013,7 @@ function desenhar(){
       pessoa(p.criado_por).nome+' '+pessoa(p.responsavel_id).nome).toLowerCase().indexOf(q)>=0; });
   var fo = $('f-obra').value;
   if(fo==='__sem') lista = lista.filter(function(p){ return !p.obra_id; });
-  else if(fo) lista = lista.filter(function(p){ return p.obra_id===fo; });
+  else if(fo) lista = lista.filter(function(p){ return mesmoId(p.obra_id, fo); });
   var fs = $('f-situacao').value;
   if(fs) lista = lista.filter(function(p){ return situacao(p)===fs; });
   var fp = $('f-prioridade').value;
@@ -1154,6 +1160,7 @@ $('btn-nova').addEventListener('click', function(){
   function pintarRascunho(){
     m.querySelector('#n-lista').innerHTML = rascunho.map(function(a,i){
       return '<span class="chip">'+(a.tipo.indexOf('image/')===0?'🖼':'📄')+' '+esc(a.nome)+
+        '<span class="peso">'+Anexos.rotuloPeso(a)+'</span>'+
         ' <button type="button" data-rm="'+i+'">×</button></span>'; }).join('');
     var b = m.querySelectorAll('[data-rm]');
     for(var i=0;i<b.length;i++) b[i].addEventListener('click', function(){
@@ -1212,9 +1219,9 @@ var Dados = {
   },
   chkIncluir: function(p, texto){ p.checklist.push({id:uid(), texto:texto, feito:false}); salvar(); },
   chkMarcar:  function(p, id){
-    p.checklist.forEach(function(c){ if(c.id===id) c.feito=!c.feito; }); salvar(); },
+    p.checklist.forEach(function(c){ if(mesmoId(c.id, id)) c.feito=!c.feito; }); salvar(); },
   chkExcluir: function(p, id){
-    p.checklist = p.checklist.filter(function(c){ return c.id!==id; }); salvar(); },
+    p.checklist = p.checklist.filter(function(c){ return !mesmoId(c.id, id); }); salvar(); },
   anexarAbertura: function(p, lista){
     lista.forEach(function(a){ p.anexos.push({id:uid(), nota_id:null, nome:a.nome, tipo:a.tipo,
       tamanho:a.tamanho, dados:a.dados, por:EU.id, em:new Date().toISOString()}); });
@@ -1385,7 +1392,7 @@ var Detalhe = {
       .sort(function(a,b){ return new Date(a.criado_em)-new Date(b.criado_em); });
     m.querySelector('#d-notas').innerHTML = ns.length ? ns.map(function(n){
       if(n.sistema) return '<div class="nota sist">'+esc(n.texto)+' · '+dataHoraBR(n.criado_em)+'</div>';
-      var an = p.anexos.filter(function(a){ return a.nota_id===n.id; });
+      var an = p.anexos.filter(function(a){ return mesmoId(a.nota_id, n.id); });
       return '<div class="nota"><div class="cab"><b>'+esc(pessoa(n.autor_id).nome)+'</b> · '+
         dataHoraBR(n.criado_em)+'</div><div class="txt">'+esc(n.texto)+'</div>'+
         (an.length?'<div class="anexos">'+an.map(Detalhe.chipAnexo).join('')+'</div>':'')+'</div>';
@@ -1425,6 +1432,7 @@ var Detalhe = {
       if(!q('#d-rascunho')) return;
       q('#d-rascunho').innerHTML = rascunho.map(function(a,i){
         return '<span class="chip">'+(a.tipo.indexOf('image/')===0?'🖼':'📄')+' '+esc(a.nome)+
+          '<span class="peso">'+Anexos.rotuloPeso(a)+'</span>'+
           ' <button type="button" data-rm="'+i+'">×</button></span>'; }).join('');
       var b = m.querySelectorAll('[data-rm]');
       for(var i=0;i<b.length;i++) b[i].addEventListener('click', function(){
@@ -1473,7 +1481,7 @@ var Detalhe = {
     var ba = m.querySelectorAll('[data-baixar]');
     for(var b2=0;b2<ba.length;b2++) ba[b2].addEventListener('click', function(){
       var alvo = this.dataset.baixar;
-      var a = p.anexos.filter(function(x){ return x.id===alvo; })[0];
+      var a = p.anexos.filter(function(x){ return mesmoId(x.id, alvo); })[0];
       if(a) Anexos.abrir(a);
     });
 
@@ -1497,38 +1505,85 @@ var Detalhe = {
    ===================================================================== */
 var Anexos = {
   LIMITE: 2*1024*1024,
+
+  /* Mostra o peso final e, quando houve ganho, o quanto encolheu.
+     Serve de educação silenciosa: a pessoa vê que a foto valeu 380 KB
+     e o PDF do scanner valeu 4 MB, e começa a fotografar. */
+  rotuloPeso: function(a){
+    if(a.original && a.original > a.tamanho*1.15)
+      return ' · '+kb(a.original)+' → '+kb(a.tamanho);
+    return ' · '+kb(a.tamanho);
+  },
   preparar: function(files, pronto){
     var fila = Array.prototype.slice.call(files), saida = [], feitos = 0;
     if(!fila.length) return;
     fila.forEach(function(f){
-      var fim = function(dados, tam, tipo){
+      var fim = function(dados, tam, tipo, original){
         if(dados) saida.push({nome:f.name, tipo:tipo||f.type||'application/octet-stream',
-                              tamanho:tam, dados:dados});
+                              tamanho:tam, dados:dados, original:original||tam});
         if(++feitos===fila.length) pronto(saida);
       };
-      if((f.type||'').indexOf('image/')===0) Anexos.comprimir(f, function(d,t){ fim(d,t,'image/jpeg'); });
+      if((f.type||'').indexOf('image/')===0)
+        Anexos.comprimir(f, function(d,t,orig){ fim(d,t,'image/jpeg',orig); });
       else if(f.size > Anexos.LIMITE){
-        aviso('"'+f.name+'" tem '+kb(f.size)+' e passa do limite de 2 MB.','erro'); fim(null);
+        aviso('"'+f.name+'" tem '+kb(f.size)+' e passa do limite de '+kb(Anexos.LIMITE)+'. '+
+              'Se for documento digitalizado, fotografar costuma resolver — a foto é compactada.','erro');
+        fim(null);
       } else {
+        if(f.size > 1024*1024)
+          aviso('"'+f.name+'" tem '+kb(f.size)+'. Arquivo que não é imagem sobe sem compactação.','');
         var r = new FileReader();
         r.onload = function(){ fim(r.result, f.size); };
         r.readAsDataURL(f);
       }
     });
   },
+  /* Alvo de tamanho, não qualidade fixa. Foto de celular moderno tem
+     4000px e 6 MB; com qualidade fixa o resultado ainda passava de 1 MB.
+     Aqui reduz a resolução e depois baixa a qualidade em degraus até
+     caber no alvo — mantendo legível o que importa numa obra: número de
+     documento, placa de equipamento, protocolo. */
+  ALVO: 400*1024,        // ~400 KB por foto
+  MAX_LADO: 1600,
+  QUALIDADES: [0.82, 0.72, 0.62, 0.52, 0.42],
+
   comprimir: function(file, pronto){
     var r = new FileReader();
     r.onload = function(){
       var img = new Image();
       img.onload = function(){
-        var MAX=1400, w=img.width, h=img.height;
-        if(w>MAX||h>MAX){ var k=MAX/Math.max(w,h); w=Math.round(w*k); h=Math.round(h*k); }
-        var cv = document.createElement('canvas'); cv.width=w; cv.height=h;
-        cv.getContext('2d').drawImage(img,0,0,w,h);
-        var d = cv.toDataURL('image/jpeg',0.72);
-        pronto(d, Math.round(d.length*0.75));
+        var w = img.width, h = img.height;
+        var MAX = Anexos.MAX_LADO;
+        if(w>MAX || h>MAX){ var k = MAX/Math.max(w,h); w = Math.round(w*k); h = Math.round(h*k); }
+        var cv = document.createElement('canvas');
+        cv.width = w; cv.height = h;
+        var ctx = cv.getContext('2d');
+        ctx.fillStyle = '#fff';           // PNG com transparência não vira preto
+        ctx.fillRect(0, 0, w, h);
+        ctx.drawImage(img, 0, 0, w, h);
+
+        var dados = null, tam = 0;
+        for(var i=0;i<Anexos.QUALIDADES.length;i++){
+          dados = cv.toDataURL('image/jpeg', Anexos.QUALIDADES[i]);
+          tam = Math.round(dados.length*0.75);
+          if(tam <= Anexos.ALVO) break;
+        }
+        // Ainda grande? Reduz o lado uma vez e repete na qualidade média.
+        if(tam > Anexos.ALVO && Math.max(w,h) > 1000){
+          var k2 = 1000/Math.max(w,h);
+          var cv2 = document.createElement('canvas');
+          cv2.width = Math.round(w*k2); cv2.height = Math.round(h*k2);
+          var c2 = cv2.getContext('2d');
+          c2.fillStyle = '#fff'; c2.fillRect(0,0,cv2.width,cv2.height);
+          c2.drawImage(cv, 0, 0, cv2.width, cv2.height);
+          dados = cv2.toDataURL('image/jpeg', 0.62);
+          tam = Math.round(dados.length*0.75);
+        }
+        // Se por algum motivo ficou maior que o original, mantém o original.
+        if(tam >= file.size){ pronto(r.result, file.size, file.size); return; }
+        pronto(dados, tam, file.size);
       };
-      img.onerror = function(){ pronto(r.result, file.size); };
+      img.onerror = function(){ pronto(r.result, file.size, file.size); };
       img.src = r.result;
     };
     r.readAsDataURL(file);
@@ -1904,8 +1959,15 @@ $('btn-equipe').addEventListener('click', function(){
         '<td data-l="Setor"><select data-setor="'+c.id+'" style="padding:5px 7px;font-size:13px"'+(gereUsuarios()?'':' disabled')+'>'+
           DB.setores.map(function(s){ return '<option'+(c.setor===s?' selected':'')+'>'+esc(s)+'</option>'; }).join('')+
           (DB.setores.indexOf(c.setor)<0?'<option selected>'+esc(c.setor)+'</option>':'')+'</select></td>'+
-        '<td data-l="Acesso"><select data-papel="'+c.id+'" style="padding:5px 7px;font-size:13px"'+(gereUsuarios()?'':' disabled')+'>'+
-          Object.keys(PAPEIS).map(function(k){ return '<option value="'+k+'"'+(c.papel===k?' selected':'')+'>'+
+        '<td data-l="Acesso"><select data-papel="'+c.id+'" style="padding:5px 7px;font-size:13px"'+
+          (gereUsuarios()?'':' disabled')+'>'+
+          /* TI gere pessoas, mas não promove ninguém a Diretoria nem a TI.
+             O "|| c.papel===k" mantém o valor atual visível quando o TI olha
+             a linha de um diretor — senão o select mostraria papel errado.
+             A trava que vale é o gatilho colab_upd, no banco. */
+          Object.keys(PAPEIS).filter(function(k){
+            return ehAdmin() || (k!=='diretor' && k!=='ti') || c.papel===k;
+          }).map(function(k){ return '<option value="'+k+'"'+(c.papel===k?' selected':'')+'>'+
             esc(PAPEIS[k])+'</option>'; }).join('')+'</select></td>'+
         '<td data-l="Enxerga"><button class="link-topo" data-obras="'+c.id+'" style="color:'+
           (quant?'var(--azul)':'var(--tinta3)')+';border-color:var(--linha)">'+
@@ -2413,6 +2475,44 @@ Anexos.enviar = function(lista, pendenciaId, notaId){
   }));
 };
 
+/* =====================================================================
+   MINIATURA DE ANEXO
+   O servidor não guarda o arquivo em base64 (a coluna "dados" só existe
+   na versão local), então a miniatura precisa de URL assinada. Pedimos
+   todas de uma vez quando o detalhe abre, para não fazer uma chamada
+   por imagem.
+   ===================================================================== */
+Detalhe.chipAnexo = function(a){
+  var img = a.tipo.indexOf('image/')===0;
+  return '<div class="anexo">'+
+    (img ? '<img alt="" data-mini="'+esc(a.caminho)+'">' : '<div class="ic">📄</div>')+
+    '<div class="inf"><div class="nm">'+esc(a.nome)+'</div>'+
+    '<div class="sb">'+kb(a.tamanho)+' · '+esc(pessoa(a.por).nome.split(' ')[0])+'</div></div>'+
+    '<button class="x" data-baixar="'+a.id+'" title="Abrir">↗</button></div>';
+};
+
+Anexos.miniaturas = function(raiz){
+  var els = raiz.querySelectorAll('img[data-mini]');
+  if(!els.length) return;
+  var caminhos = [];
+  for(var i=0;i<els.length;i++) caminhos.push(els[i].dataset.mini);
+  sb.storage.from('anexos').createSignedUrls(caminhos, 600).then(function(r){
+    if(r.error || !r.data) return;
+    var mapa = {};
+    r.data.forEach(function(x){ if(x.signedUrl) mapa[x.path] = x.signedUrl; });
+    for(var j=0;j<els.length;j++){
+      var u = mapa[els[j].dataset.mini];
+      if(u) els[j].src = u;
+    }
+  }).catch(function(){});   // sem sinal: fica o espaço cinza, não quebra
+};
+
+var ligarDetalheLocal = Detalhe.ligar;
+Detalhe.ligar = function(m, p, souCriador, souResp, rascunho){
+  ligarDetalheLocal(m, p, souCriador, souResp, rascunho);
+  Anexos.miniaturas(m);
+};
+
 Anexos.abrir = function(a){
   var alvo = window.open('');
   sb.storage.from('anexos').createSignedUrl(a.caminho, 300).then(function(r){
@@ -2741,18 +2841,22 @@ function iniciar(sessao){
   if(location.hash.indexOf('access_token') >= 0)
     history.replaceState(null,'',location.pathname+location.search);
 
+  /* O cadastro é fechado: quem cria o perfil é a função criar-usuario.
+     Não existe mais insert aqui — o RLS barraria de qualquer jeito, e o
+     usuário cairia numa tela de erro sem instrução. */
   sb.from('colaboradores').select(CAMPOS_COLAB).eq('id', sessao.user.id).maybeSingle()
     .then(function(r){
       if(r.error) throw r.error;
       if(!r.data){
-        return sb.from('colaboradores')
-          .insert({ id:sessao.user.id, email:sessao.user.email, nome:'' })
-          .select(CAMPOS_COLAB).maybeSingle().then(function(x){ return x.data; });
+        telaLogin('<span style="color:var(--erro)">Seu acesso ainda não foi finalizado. '+
+          'Peça à Diretoria ou ao TI para criá-lo pelo próprio sistema, em <b>Equipe</b>.</span>');
+        return sb.auth.signOut().then(function(){ return null; });
       }
       return r.data;
     })
     .then(function(perfil){
-      if(!perfil || !perfil.nome || !perfil.nome.trim()){
+      if(perfil === null) return;          // já mostrou a tela de login e saiu
+      if(!perfil.nome || !perfil.nome.trim()){
         return sb.from('setores').select('nome').order('nome').then(function(s){
           $('p-setor').innerHTML = (s.data||[]).map(function(x){
             return '<option>'+esc(x.nome)+'</option>'; }).join('');
