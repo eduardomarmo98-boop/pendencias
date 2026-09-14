@@ -78,6 +78,12 @@
   .troca span{font-size:13px;opacity:.8;white-space:nowrap}
   .troca select{background:transparent;color:#fff;border:none;font-size:13.5px;font-weight:600;max-width:220px}
   .troca select option{color:var(--tinta);background:#fff}
+  /* iniciais de quem está usando, no lugar da antiga caixa "Usando como" */
+  .eu{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.18);color:#fff;
+      font-size:13px;font-weight:750;letter-spacing:.3px;flex:0 0 auto;
+      display:inline-flex;align-items:center;justify-content:center}
+  .eu:hover{background:rgba(255,255,255,.3)}
+
   .link-topo{font-size:13px;color:#fff;opacity:.78;padding:4px;white-space:nowrap;border-bottom:1px solid rgba(255,255,255,.35)}
   .link-topo:hover{opacity:1;border-color:var(--laranja)}
 
@@ -182,6 +188,9 @@
   .fab{position:fixed;right:20px;bottom:22px;z-index:45;background:var(--azul);color:#fff;font-weight:650;
        font-size:14.5px;padding:14px 22px;border-radius:30px;box-shadow:0 4px 18px rgba(0,41,107,.4)}
   .fab:hover{background:var(--azul-claro)}
+
+  /* página de trás parada enquanto há folha aberta */
+  body.travado{overflow:hidden}
 
   .fundo-modal{position:fixed;inset:0;background:rgba(0,15,40,.58);z-index:60;display:flex;align-items:flex-start;
                justify-content:center;padding:22px 14px;overflow-y:auto}
@@ -340,7 +349,11 @@
 
     .faixa{font-size:13px;padding:5px 12px}
 
-    header{padding:9px 13px;gap:9px;position:sticky;top:0;z-index:48}
+    /* DOIS barras grudadas em top:0 é uma em cima da outra: o nav tem
+       z-index menor, some por baixo do cabeçalho e aparece cortado. Só
+       o nav gruda — é ele que precisa estar sempre ao alcance, porque
+       leva os contadores. O cabeçalho rola junto com a página. */
+    header{padding:9px 13px;gap:9px}
     header img.logo{height:23px}
     .troca{padding:4px 8px;order:3;width:100%;margin-top:2px}
     .troca span{display:none}
@@ -368,19 +381,31 @@
 
     .fab{right:14px;bottom:calc(16px + env(safe-area-inset-bottom));padding:15px 22px;font-size:15px}
 
-    /* modal vira folha que sobe de baixo, ocupando a tela */
-    .fundo-modal{padding:0;align-items:flex-end}
+    /* modal vira folha que sobe de baixo, ocupando a tela.
+
+       ATENÇÃO à fresta do topo: com o fundo rolável (overflow-y:auto) e
+       a folha em 96vh sobrava uma faixa do painel aparecendo em cima.
+       Encostar nela iniciava a rolagem do FUNDO, que engolia o gesto — e
+       a partir daí a folha não rolava mais. Dois contêineres roláveis
+       aninhados no celular sempre brigam. Agora o fundo não rola: quem
+       rola é só o corpo da folha. A fresta continua ali de propósito,
+       para se ver que é uma folha e para dar onde tocar e fechar. */
+    .fundo-modal{padding:0;align-items:flex-end;overflow:hidden;
+                 height:100vh;height:100dvh;touch-action:none}
     .modal,.modal.largo{max-width:none;border-radius:16px 16px 0 0;margin:0;
-                        max-height:96vh;display:flex;flex-direction:column;
-                        animation:sobe .22s ease-out}
+                        max-height:calc(100dvh - 26px);display:flex;flex-direction:column;
+                        touch-action:auto;animation:sobe .22s ease-out}
     @keyframes sobe{from{transform:translateY(28px);opacity:.6}to{transform:none;opacity:1}}
     .modal-topo{padding:14px 16px;position:relative}
     .modal-topo::before{content:'';position:absolute;top:6px;left:50%;transform:translateX(-50%);
                         width:38px;height:4px;border-radius:3px;background:var(--linha)}
     .modal-topo h2{font-size:16px;padding-top:5px}
     .fechar{font-size:30px;padding:0 8px;min-width:44px;min-height:44px}
+    /* overscroll-behavior:contain impede que, ao chegar no fim da folha,
+       a rolagem "vaze" para a lista atrás — outro jeito de o gesto se
+       perder no meio do caminho. */
     .modal-corpo{max-height:none;flex:1;overflow-y:auto;padding:16px;
-                 -webkit-overflow-scrolling:touch}
+                 overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
     .modal-rodape{padding:12px 16px calc(12px + env(safe-area-inset-bottom));flex-wrap:wrap}
     .modal-rodape .btn{flex:1 1 auto;min-width:135px;text-align:center;padding:13px 16px}
     .modal-rodape .dica{flex:1 1 100%;order:-1;margin:0 0 4px}
@@ -508,13 +533,9 @@
       <button class="elo" id="ir-recuperar">Esqueci minha senha</button>
       <button class="elo oculto" id="ir-entrar">← Voltar para o login</button>
     </div>
-    <div class="dica" style="margin-top:14px;text-align:center;font-size:12px">
-      O acesso é criado pela Diretoria ou pelo TI.
-    </div>
     
     <div class="rodape">
-      © 2026 Brandão &amp; Marmo Engenharia · Todos os direitos reservados<br>
-      <span class="v">BeMer FLOW v2026.09.14.1</span>
+      <span class="v">v2026.09.14.3</span> · © Brandão &amp; Marmo
     </div>
   </div>
 </div>
@@ -534,8 +555,7 @@
     <div id="msg-nova-senha" class="dica" style="margin-top:14px;text-align:center"></div>
     
     <div class="rodape">
-      © 2026 Brandão &amp; Marmo Engenharia · Todos os direitos reservados<br>
-      <span class="v">BeMer FLOW v2026.09.14.1</span>
+      <span class="v">v2026.09.14.3</span> · © Brandão &amp; Marmo
     </div>
   </div>
 </div>
@@ -556,8 +576,7 @@
     </form>
     
     <div class="rodape">
-      © 2026 Brandão &amp; Marmo Engenharia · Todos os direitos reservados<br>
-      <span class="v">BeMer FLOW v2026.09.14.1</span>
+      <span class="v">v2026.09.14.3</span> · © Brandão &amp; Marmo
     </div>
   </div>
 </div>
@@ -571,7 +590,11 @@
     <div class="marca-icone icone-bm" role="img" aria-label="BeMer FLOW"></div>
     <div class="marca-txt"><b>BeMer</b> FLOW</div>
   </div>
-  <div class="troca">
+  <!-- Trocar de pessoa só faz sentido na versão local de teste. Na
+       publicada o login já decide quem você é, e esta caixa ocupava uma
+       linha inteira do cabeçalho em todo celular — espaço caro. O
+       _prod.js esconde isto e liga o círculo com as iniciais. -->
+  <div class="troca" id="troca">
     <span>Usando como:</span>
     <select id="quem"></select>
   </div>
@@ -589,6 +612,8 @@
     </svg>
     <span class="sino-conta oculto" id="sino-conta">0</span>
   </button>
+  <!-- iniciais de quem está usando; abre o menu com Sair -->
+  <button class="eu oculto" id="btn-eu" aria-label="Sua conta"></button>
   <div class="menu-topo">
     <button class="menu-botao" id="menu-botao" aria-label="Menu">⋯</button>
     <div class="menu-lista" id="menu-lista">
@@ -667,7 +692,7 @@ if(SUPABASE_URL.indexOf('COLE_AQUI') === 0 || SUPABASE_KEY.indexOf('COLE_AQUI') 
 
 /* Versão. Uma constante só, referenciada em todo lugar — no BeMer ela
    vive em cinco pontos e vive dessincronizada. Formato AAAA.MM.DD.N. */
-var APP_VERSAO = '2026.09.14.1';
+var APP_VERSAO = '2026.09.14.3';
 
 var APP_NOME = 'BeMer FLOW';
 var APP_SUB  = 'Pendências entre escritório e obra';
@@ -800,10 +825,10 @@ var ASSUNTOS_PADRAO = ['Documentação e projetos','Suprimentos e compras','Medi
 function exemplo(){
   var D = function(n){ var d=new Date(); d.setDate(d.getDate()+n); d.setHours(23,59,59,0); return d.toISOString(); };
   var obras = [
-    {id:'o1', nome:'Rede D’Or — Hospital São Luiz Itaim', cliente:'Rede D’Or', status:'ativa'},
-    {id:'o2', nome:'HCor — Medicina Diagnóstica',          cliente:'HCor',       status:'ativa'},
-    {id:'o3', nome:'Centro de Distribuição DHL',           cliente:'DHL',        status:'ativa'},
-    {id:'o4', nome:'Colégio Bandeirantes — Bloco C',       cliente:'Col. Bandeirantes', status:'ativa'}
+    {id:'o1', nome:'Rede D’Or — Hospital São Luiz Itaim', status:'ativa'},
+    {id:'o2', nome:'HCor — Medicina Diagnóstica', status:'ativa'},
+    {id:'o3', nome:'Centro de Distribuição DHL', status:'ativa'},
+    {id:'o4', nome:'Colégio Bandeirantes — Bloco C', status:'ativa'}
   ];
   var p = [
     {id:'p1', nome:'Eduardo S. Marmo', setor:'Diretoria',   cargo:'Diretor',                papel:'diretor',     ativo:true, obras:[]},
@@ -1188,7 +1213,7 @@ function desenhar(){
   if(q){
     lista = vis.filter(function(p){
       var o = obra(p.obra_id);
-      return (p.titulo+' '+p.descricao+' '+p.frente+' '+(o?o.nome+' '+o.cliente:'')+' '+
+      return (p.titulo+' '+p.descricao+' '+p.frente+' '+(o?o.nome:'')+' '+
         pessoa(p.criado_por).nome+' '+pessoa(p.responsavel_id).nome).toLowerCase().indexOf(q)>=0; });
   }
   var fo = $('f-obra').value;
@@ -1474,6 +1499,25 @@ function ligarCartoes(raiz){
     }
   });
 }
+
+/* =====================================================================
+   TRAVA DA PÁGINA DE TRÁS
+   Com a folha aberta, a lista atrás não pode rolar: no celular o dedo
+   pega uma ou outra sem critério, e a pessoa conclui que a tela travou.
+
+   Feito por observador em vez de na função de fechar porque há uma dúzia
+   de lugares que removem a folha direto — agir, resolver, reprogramar,
+   abrir outra pendência pelo sino. Chegar em todos seria questão de
+   tempo até alguém esquecer de um e a página ficar travada de vez.
+   ===================================================================== */
+(function(){
+  var caixa = $('modais');
+  if(!caixa || typeof MutationObserver === 'undefined') return;
+  function sincronizar(){
+    document.body.classList.toggle('travado', caixa.children.length > 0);
+  }
+  new MutationObserver(sincronizar).observe(caixa, { childList:true });
+})();
 
 /* ---------------- modal ---------------- */
 function abrirModal(html, largo, nivel2){
@@ -1768,7 +1812,7 @@ var Detalhe = {
       '</h2><button class="fechar">&times;</button></div>'+
       '<div class="modal-corpo">'+
       '<div class="obra" style="margin-bottom:12px">'+
-        (o ? '🏗 '+esc(o.nome)+' — '+esc(o.cliente) : '🏢 Assunto interno do escritório')+
+        (o ? '🏗 '+esc(o.nome) : '🏢 Assunto interno do escritório')+
         (p.frente?'<span class="frente">· '+esc(p.frente)+'</span>':'')+'</div>'+
       '<div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:16px">'+
       tagSituacao(p)+tagPrioridade(p)+'<span class="tag t-neutro">'+esc(ST[p.status])+'</span>'+
@@ -2389,11 +2433,11 @@ var Painel = {
    produção (Supabase). A versão local grava direto no objeto DB.
    ===================================================================== */
 var Admin = {
-  obraNova: function(nome, cliente){
+  obraNova: function(nome){
     var chave = nome.trim().toLowerCase();
     var igual = DB.obras.filter(function(o){ return o.nome.trim().toLowerCase()===chave; })[0];
     if(igual) return Promise.reject(new Error('Já existe a obra "'+igual.nome+'".'));
-    DB.obras.push({id:uid(), nome:nome.trim(), cliente:cliente, status:'ativa'});
+    DB.obras.push({id:uid(), nome:nome.trim(), status:'ativa'});
     return Promise.resolve(salvar());
   },
   obraStatus: function(o){
@@ -2434,13 +2478,13 @@ $('btn-obras').addEventListener('click', function(){
   var m = abrirModal(
     '<div class="modal-topo"><h2>Obras</h2><button class="fechar">&times;</button></div>'+
     '<div class="modal-corpo">'+
-    '<div class="rolagem"><table><thead><tr><th>Obra</th><th>Cliente</th>'+
+    '<div class="rolagem"><table><thead><tr><th>Obra ou local</th>'+
     '<th style="text-align:center">Em aberto</th><th style="text-align:center">Vencidas</th>'+
     (ehAdmin()?'<th></th>':'')+'</tr></thead><tbody id="tb-obras"></tbody></table></div>'+
     (ehAdmin() ? '<h3 class="secao">Cadastrar obra</h3>'+
-      '<form id="f-obra-nova"><div class="dupla">'+
-      '<div><label class="primeiro">Nome da obra</label><input type="text" id="o-nome" required placeholder="Ex.: Hospital São Luiz — Unidade Itaim"></div>'+
-      '<div><label class="primeiro">Cliente</label><input type="text" id="o-cliente" placeholder="Ex.: Rede D’Or"></div></div>'+
+      '<form id="f-obra-nova">'+
+      '<label class="primeiro">Obra ou local</label>'+
+      '<input type="text" id="o-nome" required placeholder="Ex.: Hospital São Luiz — Unidade Itaim">'+
       '<button type="submit" class="btn btn-p" style="margin-top:14px">Cadastrar</button></form>' : '')+
     '</div><div class="modal-rodape"><span style="flex:1"></span><button class="btn btn-s fechar">Fechar</button></div>', true);
 
@@ -2449,20 +2493,20 @@ $('btn-obras').addEventListener('click', function(){
       var ps = visiveis().filter(function(p){ return p.obra_id===o.id && ABERTOS.indexOf(p.status)>=0; });
       var at = ps.filter(function(p){ return situacao(p)==='atrasada'; }).length;
       return '<tr class="clicavel" data-ver="'+o.id+'" style="'+(o.status==='ativa'?'':'opacity:.45')+'">'+
-        '<td><b>'+esc(o.nome)+'</b></td><td data-l="Cliente">'+esc(o.cliente||'—')+'</td>'+
+        '<td><b>'+esc(o.nome)+'</b></td>'+
         '<td class="num" data-l="Em aberto">'+ps.length+'</td>'+
         '<td class="num" data-l="Vencidas" data-zero="'+(at?0:1)+'" style="color:'+
           (at?'var(--erro)':'var(--tinta3)')+'">'+at+'</td>'+
         (ehAdmin()?'<td data-l="Situação"><button class="link-topo" data-obra="'+o.id+
           '" style="color:var(--tinta3);border-color:var(--linha)">'+
           (o.status==='ativa'?'Encerrar':'Reabrir')+'</button></td>':'')+'</tr>';
-    }).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--tinta3);padding:26px">Nenhuma obra cadastrada.</td></tr>';
+    }).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--tinta3);padding:26px">Nenhuma obra cadastrada.</td></tr>';
 
     var vv = m.querySelectorAll('[data-ver]');
     for(var i=0;i<vv.length;i++) vv[i].addEventListener('click', function(e){
       if(e.target.dataset.obra) return;
       var o = obra(this.dataset.ver);
-      Painel.abrirLista(o.nome, o.cliente||'Obra',
+      Painel.abrirLista(o.nome, 'Obra ou local',
         visiveis().filter(function(p){ return p.obra_id===o.id && ABERTOS.indexOf(p.status)>=0; }));
     });
     var bs = m.querySelectorAll('[data-obra]');
@@ -2476,8 +2520,7 @@ $('btn-obras').addEventListener('click', function(){
   if(m.querySelector('#f-obra-nova')) m.querySelector('#f-obra-nova').addEventListener('submit', function(e){
     e.preventDefault();
     var f = this;
-    Admin.obraNova(m.querySelector('#o-nome').value.trim(),
-                   m.querySelector('#o-cliente').value.trim())
+    Admin.obraNova(m.querySelector('#o-nome').value.trim())
       .then(function(){ f.reset(); pintar(); desenhar(); aviso('Obra cadastrada.','ok'); })
       .catch(function(err){ aviso(err.message||String(err),'erro'); });
   });
@@ -2507,6 +2550,10 @@ $('btn-equipe').addEventListener('click', function(){
       '<div><label>Setor</label><select id="e-setor">'+
         DB.setores.map(function(s){ return '<option>'+esc(s)+'</option>'; }).join('')+'</select></div>'+
       '<div><label>Cargo</label><input type="text" id="e-cargo" placeholder="Ex.: Engenheira de obra"></div></div>'+
+      '<label>Celular com WhatsApp <span style="font-weight:400;color:var(--tinta3)">(opcional)</span></label>'+
+      '<input type="tel" id="e-whats" inputmode="numeric" placeholder="11 98765-4321">'+
+      '<div class="dica">Recebe aviso de pendência nova e na véspera do vencimento. '+
+        'Só isso — e a pessoa pode desligar depois.</div>'+
       '<label>Nível de acesso</label><select id="e-papel">'+
         Object.keys(PAPEL_DESC).filter(function(k){
           return ehAdmin() || (k!=='diretor' && k!=='ti'); }).map(function(k){
@@ -2573,7 +2620,10 @@ $('btn-equipe').addEventListener('click', function(){
     Admin.pessoaNova({ nome:m.querySelector('#e-nome').value.trim(),
       email: campoEmail ? campoEmail.value.trim() : '',
       setor:m.querySelector('#e-setor').value, cargo:m.querySelector('#e-cargo').value.trim(),
-      papel:m.querySelector('#e-papel').value })
+      papel:m.querySelector('#e-papel').value,
+      /* guarda só dígitos: a Meta recusa qualquer outra coisa, e deixar
+         a máscara passar é problema que só aparece no primeiro envio. */
+      whatsapp:(m.querySelector('#e-whats')||{value:''}).value.replace(/\D/g,'') })
       .then(function(){ f.reset(); pintar(); desenhar();
         aviso('Acesso criado. A pessoa recebeu o e-mail para definir a senha.','ok'); })
       .catch(function(err){ aviso(err.message||String(err),'erro'); })
@@ -2796,10 +2846,10 @@ $('btn-dados').addEventListener('click', function(){
    ===================================================================== */
 (function(){
   var botao = $('menu-botao'), lista = $('menu-lista');
-  botao.addEventListener('click', function(e){
-    e.stopPropagation();
-    lista.classList.toggle('on');
-  });
+  function abrir(e){ e.stopPropagation(); lista.classList.toggle('on'); }
+  botao.addEventListener('click', abrir);
+  /* o círculo com as iniciais abre o mesmo menu — é onde está o Sair */
+  $('btn-eu').addEventListener('click', abrir);
   document.addEventListener('click', function(){ lista.classList.remove('on'); });
   lista.addEventListener('click', function(e){ e.stopPropagation(); });
   var itens = lista.querySelectorAll('[data-menu]');
@@ -2860,7 +2910,7 @@ var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
   auth: { persistSession:true, autoRefreshToken:true, detectSessionInUrl:true }
 });
 
-var CAMPOS_COLAB = 'id,nome,setor,cargo,papel,ativo';
+var CAMPOS_COLAB = 'id,nome,setor,cargo,papel,ativo,whatsapp,avisa_whatsapp';
 
 /* ---------------- envio ao servidor ---------------- */
 /* =====================================================================
@@ -3266,8 +3316,10 @@ Dados = {
 };
 
 Admin = {
-  obraNova: function(nome, cliente){
-    return envio(sb.from('obras').insert({nome:nome, cliente:cliente}), 'a obra')
+  obraNova: function(nome){
+    /* a coluna cliente continua no banco, só deixou de ser preenchida:
+       apagá-la exigiria migração e não traz nada. */
+    return envio(sb.from('obras').insert({nome:nome}), 'a obra')
       .then(recarregarTudo);
   },
   obraStatus: function(o){
@@ -3294,6 +3346,12 @@ Admin = {
         throw new Error(m);
       }
       if(dados.aviso) aviso(dados.aviso, 'erro');
+      /* O telefone não passa pela Edge Function: ela cuida do acesso, e
+         misturar cadastro nela seria dar a ela mais poder do que precisa.
+         Grava-se depois, com a permissão de coluna que o 09 concedeu. */
+      if(d.whatsapp && dados.id)
+        return sb.from('colaboradores').update({ whatsapp:d.whatsapp })
+          .eq('id', dados.id).then(function(){ return recarregarTudo(); });
       return recarregarTudo();
     });
   },
@@ -3334,10 +3392,23 @@ Admin = {
 /* =====================================================================
    IDENTIDADE — sem troca de pessoa; quem manda é o login
    ===================================================================== */
+/* A caixa "Usando como" era uma lista suspensa desabilitada com o próprio
+   nome de quem já estava logado — ocupava uma linha inteira do cabeçalho
+   em todo celular, e no alto da tela o espaço é o mais caro que existe.
+   Sobra da versão de teste, onde trocar de pessoa faz sentido. Aqui vira
+   um círculo com as iniciais, que abre o menu. */
+function iniciais(nome){
+  var p = String(nome||'').trim().split(/\s+/).filter(function(x){ return x.length > 2; });
+  if(!p.length) return '?';
+  return (p[0].charAt(0) + (p.length>1 ? p[p.length-1].charAt(0) : '')).toUpperCase();
+}
 function montarSeletor(){
-  $('quem').innerHTML = '<option>'+esc(EU.nome)+' — '+esc(EU.setor)+
-    (EU.papel!=='colaborador' ? ' · '+PAPEIS[EU.papel].toLowerCase() : '')+'</option>';
-  $('quem').disabled = true;
+  $('troca').classList.add('oculto');
+  var b = $('btn-eu');
+  b.classList.remove('oculto');
+  b.textContent = iniciais(EU.nome);
+  b.title = EU.nome + ' — ' + EU.setor +
+    (EU.papel!=='colaborador' ? ' · '+PAPEIS[EU.papel].toLowerCase() : '');
 }
 
 /* =====================================================================
@@ -3436,15 +3507,18 @@ function msgLogin(txt, cor){
 function trocarModo(novo){
   MODO = novo;
   msgLogin('');
+  /* No modo entrar o cartão fica só com a marca: quem chega aqui sabe
+     que precisa de e-mail e senha, e explicar isso ocupa espaço sem
+     acrescentar nada. */
   var t = {
-    entrar:    ['Gestão de Pendências', 'Entre com seu e-mail do escritório e sua senha.', 'Entrar'],
+    entrar:    ['Sistema <b>BeMer</b> <i>FLOW</i>', esc(APP_SUB), 'Entrar'],
     recuperar: ['Definir minha senha',
-                'Informe seu e-mail. Enviamos um link para você criar ou trocar a senha. '+
-                'Só funciona se a Diretoria ou o TI já tiver criado seu acesso.', 'Enviar link']
+                'Informe seu e-mail. Enviamos um link para você criar ou trocar a senha.',
+                'Enviar link']
   }[novo];
-  $('login-titulo').textContent = t[0];
-  $('login-sub').textContent    = t[1];
-  $('btn-login').textContent    = t[2];
+  $('login-titulo').innerHTML = t[0];
+  $('login-sub').innerHTML    = t[1];
+  $('btn-login').textContent  = t[2];
   $('campo-senha').classList.toggle('oculto', novo === 'recuperar');
   $('campo-senha2').classList.add('oculto');
   $('ir-recuperar').classList.toggle('oculto', novo !== 'entrar');
