@@ -100,6 +100,23 @@
                  border:1px solid var(--linha);color:var(--tinta2)}
   .subnav button.on{background:var(--azul);color:#fff;border-color:var(--azul)}
 
+  /* grupos por urgência: o cabeçalho gruda no topo enquanto rola, para
+     a pessoa saber onde está sem ter que voltar */
+  .grupo{margin-bottom:18px}
+  .grupo-cab{position:sticky;top:0;z-index:5;background:var(--fundo);
+             padding:7px 2px 7px;font-size:13px;font-weight:750;color:var(--tinta2);
+             text-transform:uppercase;letter-spacing:.7px;
+             border-bottom:1px solid var(--linha);margin-bottom:9px}
+  .grupo-cab span{display:inline-block;margin-left:5px;background:var(--neutro-bg);
+                  color:var(--tinta2);border-radius:20px;padding:1px 8px;
+                  font-size:13px;font-weight:700;letter-spacing:0}
+  .grupo.g-erro .grupo-cab{color:var(--erro);border-bottom-color:var(--erro)}
+  .grupo.g-erro .grupo-cab span{background:var(--erro);color:#fff}
+  .grupo.g-laranja .grupo-cab{color:var(--laranja-txt);border-bottom-color:var(--laranja)}
+  .grupo.g-laranja .grupo-cab span{background:var(--laranja);color:#3d2400}
+  .grupo.g-ok .grupo-cab{color:var(--ok)}
+  .vazio .depois{margin-top:9px;font-size:13px;color:var(--tinta3);font-weight:400}
+
   .lista{display:flex;flex-direction:column;gap:9px}
   .card{background:var(--branco);border:1px solid var(--linha);border-radius:var(--r);padding:13px 15px;
         box-shadow:var(--sombra);cursor:pointer;border-left:3.5px solid var(--linha);transition:.13s}
@@ -108,6 +125,13 @@
   .card.vencendo{border-left-color:var(--laranja)}
   .card.sem_prazo{border-left-color:var(--laranja);background:linear-gradient(90deg,#FFFBF4,#fff 60%)}
   .card.encerrada{opacity:.6;border-left-color:var(--ok)}
+  /* falha de gravação: fica no cartão até subir. Aviso de topo some em
+     5,4 s e no celular passa batido — a pessoa acha que gravou. */
+  .card.com-falha{border-color:var(--erro);border-left-color:var(--erro)}
+  .card .falha{background:var(--erro-bg);color:var(--erro);border-radius:7px;
+               padding:7px 10px;margin-bottom:9px;font-size:13px;font-weight:600;
+               display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .card .falha .retentar{color:var(--erro);text-decoration:underline;font-weight:700;font-size:13px}
   .card h3{font-size:15px;font-weight:600;line-height:1.35}
   .card .meta{font-size:13px;color:var(--tinta3);display:flex;gap:6px;flex-wrap:wrap;align-items:center}
   .card .meta b{color:var(--tinta2);font-weight:600}
@@ -117,6 +141,12 @@
   .topo{display:flex;gap:10px;align-items:flex-start;margin-bottom:6px}
   .topo h3{flex:1}
 
+  /* número da pendência no alto do detalhe: existe para ser citado */
+  .modal-topo .num{font-size:13px;font-weight:700;color:var(--tinta3);background:var(--neutro-bg);
+                   border-radius:6px;padding:2px 7px;margin-left:8px;vertical-align:middle;
+                   letter-spacing:.3px}
+  .modal-topo .num:hover{background:var(--azul);color:#fff}
+
   .tag{display:inline-flex;align-items:center;font-size:13px;font-weight:700;padding:3px 8px;border-radius:20px;white-space:nowrap}
   .t-ok{background:var(--ok-bg);color:var(--ok)}
   .t-laranja{background:var(--laranja-bg);color:var(--laranja-txt)}
@@ -124,6 +154,24 @@
   .t-neutro{background:var(--neutro-bg);color:var(--tinta2)}
   .t-urgente{background:var(--erro);color:#fff}
   .t-acao{background:var(--laranja);color:#3d2400}
+  /* o selo virou botão: precisa parecer tocável e ter alvo de dedo */
+  button.tag{min-height:30px;padding:5px 11px;cursor:pointer}
+  button.tag:hover{filter:brightness(.93)}
+
+  /* painel que abre dentro do cartão (2.3) */
+  .agir{margin-top:11px;padding-top:11px;border-top:1px dashed var(--linha);cursor:default}
+  .agir-tit{font-size:13px;font-weight:700;color:var(--tinta2);margin:0 0 7px}
+  .agir .agir-tit:not(:first-child){margin-top:13px}
+  .fichas{display:flex;gap:7px;flex-wrap:wrap}
+  .ficha{border:1px solid var(--linha);background:var(--branco);border-radius:20px;
+         padding:9px 14px;font-size:13px;font-weight:600;color:var(--tinta2);min-height:38px}
+  .ficha:hover{border-color:var(--azul);color:var(--azul)}
+  .ficha.on{background:var(--azul);border-color:var(--azul);color:#fff}
+  .agir input[type=date],.agir select,.agir textarea{width:100%;margin-top:9px;padding:10px 12px;
+    border:1px solid var(--linha);border-radius:9px;font-size:16px;background:var(--branco)}
+  .agir textarea{min-height:66px;resize:vertical;font-size:15px}
+  .agir .btn{margin-top:10px}
+  .agir .dica{margin-top:9px}
 
   .barra{height:4px;background:var(--neutro-bg);border-radius:4px;overflow:hidden;margin-top:7px}
   .barra i{display:block;height:100%;background:var(--ok);border-radius:4px}
@@ -466,7 +514,7 @@
     
     <div class="rodape">
       © 2026 Brandão &amp; Marmo Engenharia · Todos os direitos reservados<br>
-      <span class="v">BeMer FLOW v2026.09.06.6</span>
+      <span class="v">BeMer FLOW v2026.09.14.1</span>
     </div>
   </div>
 </div>
@@ -487,7 +535,7 @@
     
     <div class="rodape">
       © 2026 Brandão &amp; Marmo Engenharia · Todos os direitos reservados<br>
-      <span class="v">BeMer FLOW v2026.09.06.6</span>
+      <span class="v">BeMer FLOW v2026.09.14.1</span>
     </div>
   </div>
 </div>
@@ -509,7 +557,7 @@
     
     <div class="rodape">
       © 2026 Brandão &amp; Marmo Engenharia · Todos os direitos reservados<br>
-      <span class="v">BeMer FLOW v2026.09.06.6</span>
+      <span class="v">BeMer FLOW v2026.09.14.1</span>
     </div>
   </div>
 </div>
@@ -554,9 +602,9 @@
 </header>
 
 <nav>
-  <button data-aba="recebidas" class="on">Recebidas <span class="cont" id="c-recebidas">0</span></button>
-  <button data-aba="enviadas">Enviadas <span class="cont" id="c-enviadas">0</span></button>
-  <button data-aba="encerradas">Encerradas</button>
+  <button data-aba="fazer" class="on">Fazer <span class="cont" id="c-fazer">0</span></button>
+  <button data-aba="esperando">Esperando <span class="cont" id="c-esperando">0</span></button>
+  <button data-aba="tudo">Tudo</button>
   <button data-aba="painel" id="aba-painel">Painel</button>
 </nav>
 
@@ -570,6 +618,7 @@
       <option value="atrasada">Vencidas</option>
       <option value="vencendo">Vencendo em 48h</option>
       <option value="no_prazo">No prazo</option>
+      <option value="encerrada">Encerradas</option>
     </select>
     <select id="f-prioridade">
       <option value="">Todas as prioridades</option>
@@ -618,14 +667,14 @@ if(SUPABASE_URL.indexOf('COLE_AQUI') === 0 || SUPABASE_KEY.indexOf('COLE_AQUI') 
 
 /* Versão. Uma constante só, referenciada em todo lugar — no BeMer ela
    vive em cinco pontos e vive dessincronizada. Formato AAAA.MM.DD.N. */
-var APP_VERSAO = '2026.09.06.6';
+var APP_VERSAO = '2026.09.14.1';
 
 var APP_NOME = 'BeMer FLOW';
 var APP_SUB  = 'Pendências entre escritório e obra';
 
 var CHAVE = 'pendencias_bm_v3';
 var CHAVE_SINO = 'bemerflow_visto';
-var DB = null, EU = null, ABA = 'recebidas', SUB = 'setor';
+var DB = null, EU = null, ABA = 'fazer', SUB = 'setor';
 
 var ST = { aguardando_prazo:'Aguardando prazo', em_andamento:'Em andamento',
            aguardando:'Aguardando terceiros', resolvida:'Resolvida', cancelada:'Cancelada' };
@@ -645,6 +694,11 @@ var CAUSAS = {
   programacao:'Programação — prazo mal dimensionado',
   outros:'Outros'
 };
+
+/* As quatro que mais aparecem, para virarem ficha no cartão. O resto
+   continua na lista completa, atrás de "outras…". Se a distribuição
+   real mudar, troque aqui — o painel de causas mostra qual é. */
+var CAUSAS_COMUNS = ['informacao','projeto','material','aprovacao'];
 
 var RECOR = { '':'Não se repete', semanal:'Toda semana', quinzenal:'A cada 15 dias',
               mensal:'Todo mês', bimestral:'A cada 2 meses' };
@@ -1075,58 +1129,145 @@ for(var i=0;i<botoesNav.length;i++) botoesNav[i].addEventListener('click', funct
   $(id).addEventListener('input', desenhar); $(id).addEventListener('change', desenhar);
 });
 
+/* =====================================================================
+   AS TRÊS ABAS
+   Antes a divisão era por autoria — Recebidas, Enviadas, Encerradas.
+   Mas ninguém abre o sistema perguntando "o que eu criei?". A pergunta
+   real é "o que trava se eu não fizer?".
+
+     Fazer      — está com você. O contador conta só o que exige ação
+                  hoje: sem prazo assumido ou vencida. Em zero, você está
+                  em dia de verdade.
+     Esperando  — você pediu e está com outra pessoa.
+     Tudo       — a carteira inteira que você enxerga, com busca e
+                  filtros. Encerradas virou filtro de situação aqui.
+
+   Tudo também resolve um problema antigo: o banco deixa todo mundo ver
+   tudo, mas a tela não oferecia caminho nenhum para isso.
+   ===================================================================== */
+function aberta(p){ return ABERTOS.indexOf(p.status)>=0; }
+
+/* O que exige ação AGORA. É o que o contador de Fazer conta — e a razão
+   de ele poder ser levado a sério. */
+function exigeAcao(p){
+  return aberta(p) && mesmoId(p.responsavel_id, EU.id) &&
+         (!p.prazo || situacao(p)==='atrasada');
+}
+
 function desenhar(){
   montarSeletor(); montarFiltroObras();
   var vis = visiveis();
-  var aberta = function(p){ return ABERTOS.indexOf(p.status)>=0; };
-  var minhas = vis.filter(function(p){ return p.responsavel_id===EU.id && aberta(p); });
-  var semPrazo = minhas.filter(function(p){ return !p.prazo; }).length;
-  var atras = minhas.filter(function(p){ return situacao(p)==='atrasada'; }).length;
+  var comigo    = vis.filter(function(p){ return mesmoId(p.responsavel_id, EU.id) && aberta(p); });
+  var comOutros = vis.filter(function(p){ return mesmoId(p.criado_por, EU.id) && aberta(p) &&
+                                                 !mesmoId(p.responsavel_id, EU.id); });
+  var agir     = comigo.filter(exigeAcao).length;
+  var semPrazo = comigo.filter(function(p){ return !p.prazo; }).length;
 
-  $('c-recebidas').textContent = minhas.length;
-  $('c-recebidas').className = 'cont'+(atras?' vermelho':semPrazo?' laranja':'');
-  $('c-enviadas').textContent = vis.filter(function(p){ return p.criado_por===EU.id && aberta(p); }).length;
+  $('c-fazer').textContent = agir;
+  $('c-fazer').className = 'cont'+(agir ? (agir>semPrazo ? ' vermelho' : ' laranja') : '');
+  $('c-esperando').textContent = comOutros.length;
   $('aba-painel').classList.toggle('oculto', EU.papel==='colaborador');
   $('btn-cadastros').classList.toggle('oculto', !ehAdmin());
   $('menu-cadastros').classList.toggle('oculto', !ehAdmin());
   if(ABA==='painel' && EU.papel==='colaborador'){
-    ABA='recebidas';
-    for(var j=0;j<botoesNav.length;j++) botoesNav[j].classList.toggle('on', botoesNav[j].dataset.aba==='recebidas');
+    ABA='fazer';
+    for(var j=0;j<botoesNav.length;j++) botoesNav[j].classList.toggle('on', botoesNav[j].dataset.aba==='fazer');
   }
   $('filtros').classList.toggle('oculto', ABA==='painel');
 
   if(ABA==='painel') return Painel.desenhar(vis);
 
-  var lista = vis.slice();
-  if(ABA==='recebidas') lista = lista.filter(function(p){ return p.responsavel_id===EU.id && aberta(p); });
-  if(ABA==='enviadas')  lista = lista.filter(function(p){ return p.criado_por===EU.id && aberta(p); });
-  if(ABA==='encerradas'){
-    lista = lista.filter(function(p){ return !aberta(p) && (p.criado_por===EU.id||p.responsavel_id===EU.id); });
-    lista.sort(function(a,b){ return new Date(b.resolvido_em||b.criado_em)-new Date(a.resolvido_em||a.criado_em); });
-  } else lista.sort(ordenar);
+  var lista;
+  if(ABA==='fazer')          lista = comigo.slice();
+  else if(ABA==='esperando') lista = comOutros.slice();
+  else                       lista = vis.slice();     // Tudo: aberta e encerrada
 
+  /* A busca roda ANTES do recorte por aba. Quem procura por "ART" quer
+     achar a ART, não descobrir em que aba ela mora. */
   var q = $('f-busca').value.trim().toLowerCase();
-  if(q) lista = lista.filter(function(p){
-    var o = obra(p.obra_id);
-    return (p.titulo+' '+p.descricao+' '+p.frente+' '+(o?o.nome+' '+o.cliente:'')+' '+
-      pessoa(p.criado_por).nome+' '+pessoa(p.responsavel_id).nome).toLowerCase().indexOf(q)>=0; });
+  if(q){
+    lista = vis.filter(function(p){
+      var o = obra(p.obra_id);
+      return (p.titulo+' '+p.descricao+' '+p.frente+' '+(o?o.nome+' '+o.cliente:'')+' '+
+        pessoa(p.criado_por).nome+' '+pessoa(p.responsavel_id).nome).toLowerCase().indexOf(q)>=0; });
+  }
   var fo = $('f-obra').value;
   if(fo==='__sem') lista = lista.filter(function(p){ return !p.obra_id; });
   else if(fo) lista = lista.filter(function(p){ return mesmoId(p.obra_id, fo); });
   var fs = $('f-situacao').value;
   if(fs) lista = lista.filter(function(p){ return situacao(p)===fs; });
+  else if(ABA==='tudo') lista = lista.filter(aberta);   // encerrada só por filtro
   var fp = $('f-prioridade').value;
   if(fp) lista = lista.filter(function(p){ return p.prioridade===fp; });
 
-  if(!lista.length){
-    var msgs = { recebidas:'Nenhuma pendência aguardando você. Tudo em dia.',
-                 enviadas:'Você não tem pendências em aberto com outras pessoas.',
-                 encerradas:'Nada encerrado até o momento.' };
-    $('conteudo').innerHTML = '<div class="vazio"><span class="ic">✓</span>'+esc(msgs[ABA])+'</div>';
-    return;
-  }
-  $('conteudo').innerHTML = '<div class="lista">'+lista.map(cartao).join('')+'</div>';
+  if(!lista.length){ $('conteudo').innerHTML = telaVazia(q, comigo); return; }
+  $('conteudo').innerHTML = agrupar(lista);
   ligarCartoes(document);
+}
+
+/* =====================================================================
+   TELA VAZIA QUE INFORMA
+   É a tela que mais se vê quando o sistema está funcionando. Gastá-la
+   só com elogio é perder o único momento em que a pessoa olha sem
+   pressa. Então diz também o que vem pela frente.
+   ===================================================================== */
+function telaVazia(busca, comigo){
+  if(busca) return '<div class="vazio"><span class="ic">🔍</span>'+
+    'Nada encontrado para “'+esc(busca)+'”.</div>';
+
+  var msg = { fazer:'Nada exigindo você agora.',
+              esperando:'Você não tem pendências em aberto com outras pessoas.',
+              tudo:'Nenhuma pendência em aberto.' }[ABA] || 'Nada por aqui.';
+
+  var extra = '';
+  if(ABA==='fazer' && comigo && comigo.length){
+    var prox = comigo.filter(function(p){ return p.prazo; }).sort(ordenar)[0];
+    if(prox) extra = 'A próxima é “'+esc(prox.titulo)+'”, '+prazoTexto(prox).toLowerCase()+'.';
+  }
+  return '<div class="vazio"><span class="ic">✓</span>'+esc(msg)+
+         (extra ? '<div class="depois">'+extra+'</div>' : '')+'</div>';
+}
+
+/* =====================================================================
+   AGRUPAR POR URGÊNCIA
+   No celular cabem três cartões por tela. Numa lista longa e plana só se
+   descobre onde acaba o urgente rolando até lá. O cabeçalho responde
+   isso antes de rolar — e gruda no topo enquanto a pessoa desce.
+   ===================================================================== */
+function grupoDe(p){
+  if(!aberta(p)) return 'encerradas';
+  if(!p.prazo) return 'sem_prazo';
+  var s = situacao(p);
+  if(s==='atrasada') return 'vencidas';
+  var fim = new Date(); fim.setHours(23,59,59,999);
+  if(new Date(p.prazo) <= fim) return 'hoje';
+  var semana = new Date(); semana.setDate(semana.getDate()+7); semana.setHours(23,59,59,999);
+  if(new Date(p.prazo) <= semana) return 'semana';
+  return 'depois';
+}
+var GRUPOS = [
+  ['vencidas',  'Vencidas',   'g-erro'],
+  ['sem_prazo', 'Sem prazo',  'g-laranja'],
+  ['hoje',      'Hoje',       ''],
+  ['semana',    'Esta semana',''],
+  ['depois',    'Depois',     ''],
+  ['encerradas','Encerradas', 'g-ok']
+];
+function agrupar(lista){
+  var por = {};
+  lista.forEach(function(p){ (por[grupoDe(p)] = por[grupoDe(p)] || []).push(p); });
+  var saida = '';
+  GRUPOS.forEach(function(g){
+    var itens = por[g[0]];
+    if(!itens || !itens.length) return;
+    itens.sort(g[0]==='encerradas'
+      ? function(a,b){ return new Date(b.resolvido_em||b.criado_em)-new Date(a.resolvido_em||a.criado_em); }
+      : ordenar);
+    saida += '<div class="grupo '+g[2]+'"><div class="grupo-cab">'+g[1]+
+             ' <span>'+itens.length+'</span></div>'+
+             '<div class="lista">'+itens.map(cartao).join('')+'</div></div>';
+  });
+  return saida;
 }
 
 function ordenar(a,b){
@@ -1143,11 +1284,24 @@ function cartao(p){
                      : 'com <b>'+esc(nomeCurto(pessoa(p.responsavel_id).nome))+'</b>';
   var nn = DB.notas.filter(function(n){ return mesmoId(n.pendencia_id, p.id) && !n.sistema; }).length;
   var envolvidos = (p.envolvidos||[]).length;
+  /* O selo era decorativo: para agir era preciso abrir o detalhe, rolar
+     e achar o controle. Agora ele é o botão. Ver 2.3 — assumir prazo
+     precisa caber em dois toques, senão ninguém assume e a conversa
+     volta para o grupo do WhatsApp. */
   var acao = '';
-  if(euResp && !p.prazo) acao = '<span class="tag t-acao">▸ Assuma o prazo</span>';
-  else if(euResp && situacao(p)==='atrasada') acao = '<span class="tag t-erro">▸ Informe nova data</span>';
+  if(euResp && !p.prazo)
+    acao = '<button class="tag t-acao" data-agir="prazo" data-p="'+p.id+'">▸ Assuma o prazo</button>';
+  else if(euResp && situacao(p)==='atrasada')
+    acao = '<button class="tag t-erro" data-agir="repro" data-p="'+p.id+'">▸ Informe nova data</button>';
 
-  return '<div class="card '+situacao(p)+'" data-id="'+p.id+'">'+
+  /* FALHAS só existe na versão publicada: na local nada vai ao servidor,
+     então não há o que falhar. */
+  var falha = (typeof FALHAS !== 'undefined') ? FALHAS[String(p.id)] : null;
+
+  return '<div class="card '+situacao(p)+(falha?' com-falha':'')+'" data-id="'+p.id+'">'+
+    (falha ? '<div class="falha" title="'+esc(falha.msg)+'">'+
+       '⚠ Não foi enviado: '+esc(falha.oQue)+
+       ' <button class="retentar" data-retentar="'+p.id+'">tentar de novo</button></div>' : '')+
     '<div class="obra">'+(o ? '🏗 '+esc(o.nome) : '🏢 Interno')+
       (p.frente?'<span class="frente">· '+esc(p.frente)+'</span>':'')+'</div>'+
     '<div class="topo"><h3>'+esc(p.titulo)+'</h3>'+acao+tagPrioridade(p)+'</div>'+
@@ -1159,11 +1313,166 @@ function cartao(p){
     (nn ? '<span>·</span><span>💬 '+nn+'</span>' : '')+
     (p.recorrencia ? '<span>·</span><span>🔁 '+esc(RECOR[p.recorrencia].toLowerCase())+'</span>' : '')+
     '</div>'+
+    '<div class="agir oculto" data-agir-de="'+p.id+'"></div>'+
     '</div>';
+}
+
+/* =====================================================================
+   AGIR NO PRÓPRIO CARTÃO (2.3)
+   Assumir prazo custava sete toques: abrir o app, achar o cartão, tocar,
+   rolar dentro da folha, achar o campo, abrir a roleta de data, escolher,
+   confirmar, fechar. Sob sol, de luva, isso basta para a pessoa desistir
+   e responder no grupo — e a pendência apodrece em "aguardando prazo",
+   que é justamente o estado que o painel mais acusa.
+
+   Não é conveniência: é a regra do Last Planner sobrevivendo ao canteiro.
+   ===================================================================== */
+function proximaSexta(){
+  var d = new Date();
+  var falta = (5 - d.getDay() + 7) % 7;   // 5 = sexta
+  if(falta <= 1) falta += 7;              // hoje ou amanhã já têm ficha própria
+  d.setDate(d.getDate() + falta);
+  return d;
+}
+function comoInput(d){
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function fichasData(){
+  var hoje = new Date(), amanha = new Date(); amanha.setDate(amanha.getDate()+1);
+  var sexta = proximaSexta();
+  return [['Hoje', hoje], ['Amanhã', amanha],
+          [diaSemana(sexta), sexta]].map(function(f){
+    return '<button class="ficha" data-data="'+comoInput(f[1])+'">'+f[0]+'</button>'; }).join('');
+}
+function diaSemana(d){
+  return ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'][d.getDay()];
+}
+
+var Agir = {
+  /* assumir prazo: três datas prontas mais "escolher" */
+  prazo: function(p){
+    return '<div class="agir-tit">Até quando você entrega?</div>'+
+      '<div class="fichas">'+fichasData()+
+      '<button class="ficha" data-abrir-data="1">Escolher…</button></div>'+
+      '<input type="date" class="oculto" data-data-livre="1" min="'+comoInput(new Date())+'">'+
+      '<div class="dica">A data é sua e não pode ser editada depois. Se mudar, você reprograma com o motivo.</div>';
+  },
+
+  /* reprogramar: data, causa em ficha e o motivo, que continua obrigatório */
+  repro: function(p){
+    var base = new Date(p.prazo) > new Date() ? new Date(p.prazo) : new Date();
+    var mais = function(dias, rot){
+      var d = new Date(base); d.setDate(d.getDate()+dias);
+      return '<button class="ficha" data-data="'+comoInput(d)+'">'+rot+'</button>'; };
+    return '<div class="agir-tit">Nova data</div>'+
+      '<div class="fichas">'+mais(3,'+3 dias')+mais(7,'+1 semana')+mais(15,'+15 dias')+
+      '<button class="ficha" data-abrir-data="1">Escolher…</button></div>'+
+      '<input type="date" class="oculto" data-data-livre="1" min="'+comoInput(new Date())+'">'+
+      '<div class="agir-tit">O que impediu</div>'+
+      '<div class="fichas">'+CAUSAS_COMUNS.map(function(k){
+        return '<button class="ficha" data-causa="'+k+'">'+esc(CAUSAS[k].split(' — ')[0])+'</button>'; }).join('')+
+      '<button class="ficha" data-abrir-causa="1">outras…</button></div>'+
+      '<select class="oculto" data-causa-livre="1"><option value="">Selecione…</option>'+
+      Object.keys(CAUSAS).map(function(k){
+        return '<option value="'+k+'">'+esc(CAUSAS[k])+'</option>'; }).join('')+'</select>'+
+      '<textarea data-motivo="1" placeholder="Descreva o que aconteceu (mínimo 10 letras)."></textarea>'+
+      '<button class="btn btn-l btn-mini" data-confirmar="1">Reprogramar</button>';
+  }
+};
+
+/* Liga o painel de um cartão. Devolve nada; erra alto se algo faltar. */
+function ligarAgir(cartaoEl, p, tipo){
+  var cx = cartaoEl.querySelector('[data-agir-de]');
+  var escolhida = null, causa = null;
+
+  function marcar(botao, grupo){
+    var irmaos = botao.parentNode.querySelectorAll('.ficha');
+    for(var i=0;i<irmaos.length;i++) irmaos[i].classList.remove('on');
+    botao.classList.add('on');
+  }
+  function gravarPrazo(data){
+    try {
+      Regras.definirPrazo(p, fimDoDia(data), EU.id);
+      salvar(); desenhar();
+      aviso('Prazo assumido para '+dataBR(p.prazo)+'.','ok');
+      if(navigator.vibrate) try { navigator.vibrate(10); } catch(e){}
+    } catch(e){ aviso(e.message,'erro'); }
+  }
+
+  cx.addEventListener('click', function(e){ e.stopPropagation(); });
+
+  var fichas = cx.querySelectorAll('[data-data]');
+  for(var i=0;i<fichas.length;i++) fichas[i].addEventListener('click', function(){
+    escolhida = this.dataset.data;
+    if(tipo==='prazo') return gravarPrazo(escolhida);
+    marcar(this);
+  });
+
+  var abrirData = cx.querySelector('[data-abrir-data]');
+  var livre = cx.querySelector('[data-data-livre]');
+  if(abrirData) abrirData.addEventListener('click', function(){
+    livre.classList.remove('oculto'); livre.focus();
+    if(livre.showPicker) try { livre.showPicker(); } catch(e){}
+  });
+  if(livre) livre.addEventListener('change', function(){
+    if(!this.value) return;
+    escolhida = this.value;
+    if(tipo==='prazo') return gravarPrazo(escolhida);
+  });
+
+  if(tipo !== 'repro') return;
+
+  var fc = cx.querySelectorAll('[data-causa]');
+  for(var j=0;j<fc.length;j++) fc[j].addEventListener('click', function(){
+    causa = this.dataset.causa; marcar(this); });
+  var abrirCausa = cx.querySelector('[data-abrir-causa]');
+  var causaLivre = cx.querySelector('[data-causa-livre]');
+  if(abrirCausa) abrirCausa.addEventListener('click', function(){
+    causaLivre.classList.remove('oculto'); causaLivre.focus(); });
+  if(causaLivre) causaLivre.addEventListener('change', function(){ causa = this.value; });
+
+  cx.querySelector('[data-confirmar]').addEventListener('click', function(){
+    try {
+      if(!escolhida) throw new Error('Escolha a nova data.');
+      if(!causa) throw new Error('Escolha o que impediu a entrega.');
+      Regras.reprogramar(p, fimDoDia(escolhida), causa,
+        cx.querySelector('[data-motivo]').value, EU.id);
+      salvar(); desenhar();
+      aviso('Reprogramada para '+dataBR(p.prazo)+'.','ok');
+      if(navigator.vibrate) try { navigator.vibrate(10); } catch(e){}
+    } catch(e){ aviso(e.message,'erro'); }
+  });
 }
 function ligarCartoes(raiz){
   var c = raiz.querySelectorAll('.card');
   for(var i=0;i<c.length;i++) c[i].addEventListener('click', function(){ Detalhe.abrir(Number(this.dataset.id)); });
+
+  /* "tentar de novo" da marca de falha. Não abre o detalhe: o clique
+     para aqui, senão a folha subiria por cima da tentativa. */
+  /* selo de ação: abre o painel no próprio cartão em vez de a folha */
+  var a = raiz.querySelectorAll('[data-agir]');
+  for(var k=0;k<a.length;k++) a[k].addEventListener('click', function(e){
+    e.stopPropagation();
+    var tipo = this.dataset.agir;
+    var p = pend(this.dataset.p);
+    var cartaoEl = this.closest ? this.closest('.card') : this.parentNode.parentNode;
+    var cx = cartaoEl.querySelector('[data-agir-de]');
+    if(!cx.classList.contains('oculto')){    // segundo toque fecha
+      cx.classList.add('oculto'); cx.innerHTML = ''; return;
+    }
+    cx.innerHTML = Agir[tipo](p);
+    cx.classList.remove('oculto');
+    ligarAgir(cartaoEl, p, tipo);
+  });
+
+  var r = raiz.querySelectorAll('[data-retentar]');
+  for(var j=0;j<r.length;j++) r[j].addEventListener('click', function(e){
+    e.stopPropagation();
+    if(typeof recarregarTudo === 'function'){
+      limparFalha(this.dataset.retentar);
+      recarregarTudo();
+    }
+  });
 }
 
 /* ---------------- modal ---------------- */
@@ -1171,12 +1480,105 @@ function abrirModal(html, largo, nivel2){
   var f = document.createElement('div');
   f.className='fundo-modal'+(nivel2?' n2':'');
   f.innerHTML = '<div class="modal'+(largo?' largo':'')+'">'+html+'</div>';
-  f.addEventListener('click', function(e){ if(e.target===f) f.remove(); });
+  /* Fechar sempre passa por aqui, para o endereço andar junto com a tela.
+     Folha de segundo nível (n2) não mexe na rota: quem manda no endereço
+     é a folha de baixo, que é a pendência. */
+  function fechar(){ f.remove(); if(!nivel2) Rota.sair(); }
+  f.addEventListener('click', function(e){ if(e.target===f) fechar(); });
   $('modais').appendChild(f);
   var b = f.querySelectorAll('.fechar');
-  for(var i=0;i<b.length;i++) b[i].addEventListener('click', function(){ f.remove(); });
+  for(var i=0;i<b.length;i++) b[i].addEventListener('click', fechar);
   return f;
 }
+/* =====================================================================
+   ROTA — um endereço para cada pendência
+   Antes disso, #/p/124 não levava a lugar nenhum: qualquer link caía na
+   lista e a pessoa tinha que caçar a pendência no meio das outras. É
+   pré-requisito de todo aviso por e-mail — link que dá trabalho é link
+   que se aprende a ignorar na segunda vez.
+
+   Abrir o detalhe empilha um estado no histórico; fechar volta um passo.
+   Assim o botão "voltar" do telefone fecha a folha em vez de sair do
+   aplicativo, que é o que a pessoa espera que aconteça.
+   ===================================================================== */
+var Rota = {
+  aberta: null,      // id que está aberto por rota
+  mexendo: false,    // trava para o popstate não brigar com o clique
+
+  /* Aberto por file:// — que é como a versão local roda, com dois
+     cliques — o navegador PROÍBE pushState e lança SecurityError. Sem
+     esta checagem o detalhe não abria mais na versão local: o erro
+     estourava antes de a folha subir. Lá a rota simplesmente não existe,
+     e não faz falta: não há link para mandar a ninguém. */
+  vale: location.protocol === 'http:' || location.protocol === 'https:',
+
+  lendo: function(){
+    var m = /^#\/p\/(\d+)$/.exec(location.hash || '');
+    return m ? m[1] : null;
+  },
+
+  empilhou: false,   // fomos nós que pusemos este estado no histórico?
+
+  entrar: function(id){
+    if(!Rota.vale || Rota.mexendo) return;
+    Rota.aberta = String(id);
+    try { history.pushState({p:String(id)}, '', '#/p/'+id); Rota.empilhou = true; }
+    catch(e){ Rota.vale = false; Rota.aberta = null; }
+  },
+
+  /* Fechar pelo X ou pelo fundo. Se fomos nós que empilhamos, volta um
+     passo — assim o histórico não enche de entradas mortas. Se o estado
+     já veio pronto (a pessoa colou o link direto), voltar sairia do
+     sistema; nesse caso só limpa o endereço. */
+  sair: function(){
+    if(!Rota.vale || Rota.aberta === null) return;
+    Rota.aberta = null;
+    if(!Rota.lendo()) return;
+    try {
+      if(Rota.empilhou){ Rota.empilhou = false; history.back(); }
+      else history.replaceState(null, '', location.pathname+location.search);
+    } catch(e){}
+  },
+
+  /* O usuário mexeu no histórico (voltar/avançar do navegador ou do
+     telefone). A tela tem que acompanhar o endereço, não o contrário. */
+  ouvir: function(){
+    if(!Rota.vale) return;
+    window.addEventListener('popstate', function(){
+      var id = Rota.lendo();
+      Rota.mexendo = true;
+      try {
+        var folha = document.querySelector('.fundo-modal');
+        Rota.empilhou = false;   // quem manda agora é o histórico, não nós
+        if(!id){ if(folha && Rota.aberta !== null){ folha.remove(); Rota.aberta = null; } }
+        else if(String(id) !== String(Rota.aberta)){
+          if(folha) folha.remove();
+          Rota.aberta = String(id);
+          Detalhe.abrir(id);
+        }
+      } finally { Rota.mexendo = false; }
+    });
+  },
+
+  /* Chamado depois que os dados chegam: se a pessoa entrou por um link,
+     abre direto a pendência que o aviso citava. */
+  retomar: function(){
+    if(!Rota.vale) return;
+    var id = Rota.lendo();
+    if(!id) return;
+    if(!pend(id)){
+      aviso('A pendência #'+id+' não existe ou não está visível para você.', 'erro');
+      try { history.replaceState(null, '', location.pathname+location.search); } catch(e){}
+      return;
+    }
+    /* Deixa a lista como primeiro passo do histórico antes de abrir a
+       folha. Sem isso, "voltar" sairia do sistema — e quem chegou por
+       link de aviso espera voltar para a própria lista. */
+    try { history.replaceState(null, '', location.pathname+location.search); } catch(e){}
+    Detalhe.abrir(id);
+  }
+};
+
 function opcoesPessoas(sel){
   return DB.colaboradores.filter(function(c){ return c.ativo; }).map(function(c){
     return '<option value="'+c.id+'"'+(c.id===sel?' selected':'')+'>'+esc(c.nome)+' — '+esc(c.setor)+
@@ -1351,14 +1753,19 @@ var Dados = {
 var Detalhe = {
   abrir: function(id){
     var p = pend(id); if(!p) return;
-    var souCriador = p.criado_por===EU.id, souResp = p.responsavel_id===EU.id;
+    Rota.entrar(p.id);
+    var souCriador = mesmoId(p.criado_por, EU.id), souResp = mesmoId(p.responsavel_id, EU.id);
     var encerrada = ABERTOS.indexOf(p.status)<0;
     var o = obra(p.obra_id);
     var atrasada = situacao(p)==='atrasada';
     var rascunho = [];
 
     var m = abrirModal(
-      '<div class="modal-topo"><h2>'+esc(p.titulo)+'</h2><button class="fechar">&times;</button></div>'+
+      '<div class="modal-topo"><h2>'+esc(p.titulo)+
+        /* O número existia só no banco. Precisa aparecer para ser citado
+           no telefone, no e-mail e na ata — e é o que o link usa. */
+        '<button class="num" data-num="'+p.id+'" title="Copiar o endereço desta pendência">#'+p.id+'</button>'+
+      '</h2><button class="fechar">&times;</button></div>'+
       '<div class="modal-corpo">'+
       '<div class="obra" style="margin-bottom:12px">'+
         (o ? '🏗 '+esc(o.nome)+' — '+esc(o.cliente) : '🏢 Assunto interno do escritório')+
@@ -1520,8 +1927,23 @@ var Detalhe = {
   },
 
   ligar: function(m, p, souCriador, souResp, rascunho){
-    function ok(msg){ salvar(); m.remove(); desenhar(); aviso(msg,'ok'); }
+    /* Rota.sair() também aqui: agir fecha a folha sem passar pelo X, e
+       sem isso o endereço ficaria em #/p/124 com a lista na tela. */
+    function ok(msg){ salvar(); m.remove(); Rota.sair(); desenhar(); aviso(msg,'ok'); }
     function q(s){ return m.querySelector(s); }
+
+    /* Copiar o endereço da pendência. Um toque, para colar no e-mail ou
+       ditar no telefone. Se o navegador não deixar copiar (acontece em
+       webview), mostra o número para a pessoa anotar. */
+    if(q('.num')) q('.num').addEventListener('click', function(){
+      var url = location.origin+location.pathname+'#/p/'+p.id;
+      var pronto = function(){ aviso('Endereço da #'+p.id+' copiado.','ok'); };
+      try {
+        if(navigator.clipboard && navigator.clipboard.writeText)
+          navigator.clipboard.writeText(url).then(pronto, function(){ aviso(url); });
+        else aviso(url);
+      } catch(e){ aviso(url); }
+    });
 
     if(q('#d-assumir')) q('#d-assumir').addEventListener('click', function(){
       try{
@@ -2401,6 +2823,8 @@ if(typeof MODO_PRODUCAO === 'undefined'){
   $('btn-sino').classList.add('oculto');   // o sino depende do servidor
   carregar();
   desenhar();
+  Rota.ouvir();
+  Rota.retomar();
 }
 
 /* =====================================================================
@@ -2439,16 +2863,50 @@ var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
 var CAMPOS_COLAB = 'id,nome,setor,cargo,papel,ativo';
 
 /* ---------------- envio ao servidor ---------------- */
-function envio(promessa, oQue){
+/* =====================================================================
+   FALHA DE GRAVAÇÃO QUE NÃO SOME SOZINHA
+   O aviso de topo desaparece em 5,4 s. No celular isso passa batido com
+   facilidade — a pessoa estava olhando para outro lado, o telefone
+   estava no bolso — e ela fica acreditando que gravou. É o pior
+   desfecho possível: pior do que o erro é não saber que houve erro.
+
+   Agora a falha marca o cartão da própria pendência e só sai quando a
+   gravação der certo. Fica na tela o tempo que for preciso.
+   ===================================================================== */
+var FALHAS = {};   // id da pendência -> o que não subiu
+
+function marcarFalha(id, oQue, msg){
+  if(id == null) return;
+  FALHAS[String(id)] = { oQue: oQue, msg: msg, em: Date.now() };
+  desenhar();
+}
+function limparFalha(id){
+  if(id == null) return;
+  if(FALHAS[String(id)]){ delete FALHAS[String(id)]; desenhar(); }
+}
+
+/* O terceiro argumento é a pendência afetada. Quando ele vem, o erro
+   vira marca no cartão em vez de recarregar a página inteira — que era
+   o que fazia a pessoa perder o que estava escrevendo. */
+function envio(promessa, oQue, idPend){
   return Promise.resolve(promessa).then(function(r){
     if(r && r.error) throw r.error;
+    limparFalha(idPend);
     return r;
   }).catch(function(e){
-    aviso('Não consegui salvar '+oQue+': '+(e.message||e)+'. Recarregando…','erro');
-    setTimeout(recarregarTudo, 1400);
+    var msg = e.message || String(e);
+    if(idPend != null){
+      marcarFalha(idPend, oQue, msg);
+      aviso('Não consegui salvar '+oQue+': '+msg,'erro');
+    } else {
+      aviso('Não consegui salvar '+oQue+': '+msg+'. Recarregando…','erro');
+      setTimeout(recarregarTudo, 1400);
+    }
     throw e;
   });
 }
+/* o erro já foi tratado dentro de envio(); isto só evita a rejeição solta */
+function nada(){}
 function salvar(){ return true; }   // o servidor é a verdade; nada a gravar aqui
 
 /* ---------------- carga inicial ----------------
@@ -2536,20 +2994,20 @@ Regras = {
 
   definirPrazo: function(p, dataISO, ator){
     RegrasLocais.definirPrazo(p, dataISO, ator); // valida e aplica na tela
-    envio(sb.rpc('definir_prazo', { p_id:p.id, p_data:paraInput(dataISO) }), 'o prazo');
+    envio(sb.rpc('definir_prazo', { p_id:p.id, p_data:paraInput(dataISO) }), 'o prazo', p.id).catch(nada);
     return p;
   },
 
   reprogramar: function(p, novaISO, cat, motivo, ator){
     RegrasLocais.reprogramar(p, novaISO, cat, motivo, ator);
     envio(sb.rpc('reprogramar', { p_id:p.id, p_data:paraInput(novaISO),
-      p_categoria:cat, p_motivo:motivo.trim() }), 'a reprogramação');
+      p_categoria:cat, p_motivo:motivo.trim() }), 'a reprogramação', p.id).catch(nada);
     return p;
   },
 
   alterarStatus: function(p, novo, ator){
     RegrasLocais.alterarStatus(p, novo, ator);
-    envio(sb.from('pendencias').update({ status:novo }).eq('id', p.id), 'o andamento');
+    envio(sb.from('pendencias').update({ status:novo }).eq('id', p.id), 'o andamento', p.id).catch(nada);
     return p;
   },
 
@@ -2557,8 +3015,8 @@ Regras = {
     var n = RegrasLocais.adicionarNota(pid, texto, ator);
     n._pendente = true;
     envio(sb.from('notas').insert({ pendencia_id:pid, texto:texto.trim(), autor_id:ator })
-      .select().single(), 'a nota')
-      .then(function(r){ if(r.data){ n.id = r.data.id; delete n._pendente; } });
+      .select().single(), 'a nota', pid)
+      .then(function(r){ if(r.data){ n.id = r.data.id; delete n._pendente; } }, nada);
     return n;
   },
 
@@ -2929,7 +3387,34 @@ function traduzErro(m){
   return esc(m);
 }
 
+/* =====================================================================
+   DESTINO — o link sobrevive ao login
+   O caso mais comum de todos: a pessoa recebe o aviso três dias depois
+   de ter usado o sistema, clica, e a sessão já expirou. Sem guardar o
+   destino ela entra e cai na lista, tendo que caçar a pendência — que é
+   exatamente o trabalho que o link existia para poupar.
+   ===================================================================== */
+var CHAVE_DESTINO = 'bemerflow_destino';
+var Destino = {
+  guardar: function(){
+    try {
+      var h = location.hash || '';
+      if(/^#\/p\/\d+$/.test(h)) localStorage.setItem(CHAVE_DESTINO, h);
+    } catch(e){}
+  },
+  restaurar: function(){
+    try {
+      var h = localStorage.getItem(CHAVE_DESTINO);
+      localStorage.removeItem(CHAVE_DESTINO);
+      /* só usa o guardado se o endereço atual não disser outra coisa */
+      if(h && !/^#\/p\/\d+$/.test(location.hash || ''))
+        history.replaceState(null, '', h);
+    } catch(e){}
+  }
+};
+
 function telaLogin(msg){
+  Destino.guardar();
   $('carregando').classList.add('oculto');
   $('tela-login').classList.remove('oculto');
   if(msg) $('msg-login').innerHTML = msg;
@@ -3120,6 +3605,9 @@ function iniciar(sessao){
         desenhar();
         Sino.atualizar();
         ligarTempoReal();
+        Rota.ouvir();
+        Destino.restaurar();   // veio de um link e teve que entrar? volta para lá
+        Rota.retomar();        // ou já entrou com #/p/124 no endereço
       });
     })
     .catch(function(e){
@@ -3290,6 +3778,21 @@ function telaNovaSenha(){
 
 sb.auth.onAuthStateChange(function(evt, sessao){
   if(evt === 'PASSWORD_RECOVERY'){ telaNovaSenha(); return; }
+
+  /* O sistema fica dias aberto no celular — o aviso de versão nova existe
+     por causa disso. Então token expirado é rotina, não exceção. Sem
+     tratar, as gravações passavam a falhar com mensagens que não diziam
+     o que havia acontecido, e a pessoa ficava tentando de novo. */
+  if(evt === 'SIGNED_OUT' && iniciado){
+    Destino.guardar();
+    $('app-todo').classList.add('oculto');
+    $('modais').innerHTML = '';
+    telaLogin('<span style="color:var(--erro)">Sua sessão expirou. '+
+      'Entre de novo — você volta para onde estava.</span>');
+    iniciado = false;
+    return;
+  }
+
   if(iniciado) return;
   if(evt === 'INITIAL_SESSION' || evt === 'SIGNED_IN'){
     if(recuperando){ telaNovaSenha(); return; }
