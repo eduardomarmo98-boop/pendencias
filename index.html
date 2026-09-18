@@ -535,7 +535,7 @@
     </div>
     
     <div class="rodape">
-      <span class="v">v2026.09.14.3</span> · © Brandão &amp; Marmo
+      <span class="v">v2026.09.18.1</span> · © Brandão &amp; Marmo
     </div>
   </div>
 </div>
@@ -555,7 +555,7 @@
     <div id="msg-nova-senha" class="dica" style="margin-top:14px;text-align:center"></div>
     
     <div class="rodape">
-      <span class="v">v2026.09.14.3</span> · © Brandão &amp; Marmo
+      <span class="v">v2026.09.18.1</span> · © Brandão &amp; Marmo
     </div>
   </div>
 </div>
@@ -576,7 +576,7 @@
     </form>
     
     <div class="rodape">
-      <span class="v">v2026.09.14.3</span> · © Brandão &amp; Marmo
+      <span class="v">v2026.09.18.1</span> · © Brandão &amp; Marmo
     </div>
   </div>
 </div>
@@ -692,7 +692,7 @@ if(SUPABASE_URL.indexOf('COLE_AQUI') === 0 || SUPABASE_KEY.indexOf('COLE_AQUI') 
 
 /* Versão. Uma constante só, referenciada em todo lugar — no BeMer ela
    vive em cinco pontos e vive dessincronizada. Formato AAAA.MM.DD.N. */
-var APP_VERSAO = '2026.09.14.3';
+var APP_VERSAO = '2026.09.18.1';
 
 var APP_NOME = 'BeMer FLOW';
 var APP_SUB  = 'Pendências entre escritório e obra';
@@ -3365,13 +3365,13 @@ Admin = {
     return envio(sb.from('colaboradores').update({ativo:c.ativo}).eq('id', c.id), 'o cadastro');
   },
   obraDoUsuario: function(c, obraId, marcado){
-    var id = Number(obraId);
+    var id = String(obraId);                       // obra é uuid, não número
     if(marcado){
-      if(c.obras.indexOf(id)<0) c.obras.push(id);
+      if(!c.obras.some(function(x){ return mesmoId(x, id); })) c.obras.push(id);
       return envio(sb.from('colaborador_obras')
         .insert({colaborador_id:c.id, obra_id:id}), 'a permissão');
     }
-    c.obras = c.obras.filter(function(x){ return Number(x)!==id; });
+    c.obras = c.obras.filter(function(x){ return !mesmoId(x, id); });
     return envio(sb.from('colaborador_obras').delete()
       .eq('colaborador_id', c.id).eq('obra_id', id), 'a permissão');
   },
